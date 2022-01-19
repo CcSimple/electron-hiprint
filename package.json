@@ -1,0 +1,80 @@
+{
+  "name": "electron-hiprint",
+  "version": "1.0.0",
+  "description": "vue-plugin-hiprint client",
+  "main": "main.js",
+  "author": "CcSimple<840054486@qq.com>",
+  "license": "MIT",
+  "homepage": "https://gitee.com/CcSimple",
+  "scripts": {
+    "start": "electron .",
+    "build-w": "electron-builder -w nsis:ia32",
+    "build-w-64": "electron-builder -w nsis:x64",
+    "build-m": "electron-builder -m",
+    "build-m-arm64": "electron-builder -m --arm64",
+    "build-l": "electron-builder -l tar.xz",
+    "compress": "node ./tools/code_compress --compress",
+    "restore": "node ./tools/code_compress --restore"
+  },
+  "build": {
+    "productName": "hiprint",
+    "appId": "com.simple.cc.hiprint",
+    "copyright": "CcSimple<840054486@qq.com>",
+    "directories": {
+      "output": "out"
+    },
+    "asar": true,
+    "files": [
+      "**/*"
+    ],
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "./build/icons/icon.ico",
+      "uninstallerIcon": "./build/icons/icon.ico",
+      "installerHeaderIcon": "./build/icons/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Hiprint"
+    },
+    "mac": {
+      "icon": "./build/icons/icon.icns",
+      "artifactName": "tool_print_mac_${arch}(${productName}-${arch}-${version}).${ext}",
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "icon": "./build/icons/icon.ico",
+      "artifactName": "tool_print_win_${arch}(${productName}-${arch}-${version}).${ext}",
+      "target": [
+        {
+          "target": "nsis"
+        }
+      ]
+    },
+    "linux": {
+      "icon": "./build/icons/256x256.png",
+      "artifactName": "tool_print_linux_${arch}(${productName}-${arch}-${version}).${ext}",
+      "target": [
+        "tar.xz"
+      ]
+    }
+  },
+  "dependencies": {
+    "jquery": "^3.6.0",
+    "socket.io": "^3.1.0",
+    "socket.io-client": "^3.1.0"
+  },
+  "devDependencies": {
+    "electron": "^12.2.3",
+    "electron-builder": "22.10.4",
+    "fs-extra": "^9.1.0",
+    "prettier": "^1.16.4",
+    "uglify-js": "^3.14.3"
+  }
+}
