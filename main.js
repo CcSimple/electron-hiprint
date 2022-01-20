@@ -26,6 +26,7 @@ const io = require("socket.io")(server, {
   pingInterval: 10000,
   pingTimeout: 5000,
   maxHttpBufferSize: 10000000000,
+  allowEIO3: true, // 兼容 Socket.IO 2.x
   // 跨域问题
   cors: {
     origin: "*",
