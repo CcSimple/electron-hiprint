@@ -24,6 +24,9 @@ async function initTray() {
   APP_TRAY.setContextMenu(contextMenu);
   // 监听点击事件
   APP_TRAY.on("click", function() {
+    if (MAIN_WINDOW.isMinimized()) {
+      MAIN_WINDOW.restore();
+    }
     if (!MAIN_WINDOW.isVisible()) {
       MAIN_WINDOW.show();
       MAIN_WINDOW.setSkipTaskbar(true);
@@ -97,7 +100,7 @@ function initPrintEvent() {
       }
     });
     let deviceName = havePrinter ? data.printer : defaultPrinter;
-    // 打印 详见https://www.electronjs.org/zh/docs/latest/api/web-contents 
+    // 打印 详见https://www.electronjs.org/zh/docs/latest/api/web-contents
     PRINT_WINDOW.webContents.print(
       {
         silent: true,
