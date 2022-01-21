@@ -49,7 +49,7 @@
       ]
     },
     "win": {
-      "icon": "./build/icons/icon.ico",
+      "icon": "./build/icons/256x256.png",
       "artifactName": "tool_print_win_${arch}(${productName}-${arch}-${version}).${ext}",
       "target": [
         {

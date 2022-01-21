@@ -94,6 +94,12 @@ async function createWindow() {
       nodeIntegration: true,
     },
   };
+  // win 左上角图标(暂处理：打包后这样设置无法显示...)
+  // 若package.json 中设置 .ico 开发可显示，打包后不显示
+  if (process.platform === "win32" && process.env.NODE_ENV !== "production") {
+    windowOptions.icon = path.join(__dirname, "build/icons/256x256.png");
+  }
+
   MAIN_WINDOW = new BrowserWindow(windowOptions);
   // 白屏的问题
   await loadingView(windowOptions);
