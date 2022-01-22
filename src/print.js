@@ -69,7 +69,7 @@ async function createPrintWindow() {
     },
   };
   PRINT_WINDOW = new BrowserWindow(windowOptions);
-  let printHtml = path.join("file://", __dirname, "/assets/print.html");
+  let printHtml = path.join("file://", app.getAppPath(), "/assets/print.html");
   PRINT_WINDOW.webContents.loadURL(printHtml);
   // PRINT_WINDOW.webContents.openDevTools();
   initPrintEvent();
