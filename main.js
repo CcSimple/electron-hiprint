@@ -12,30 +12,24 @@ global.CAN_QUIT = false;
 // 打印窗口
 global.PRINT_WINDOW = null;
 
-// socket.io
-// 跨域问题
-server.on("request", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
-  // 允许私人网络请求  // 请求端 header 添加 "Access-Control-Request-Private-Network": true,
-  // ... 然并卵
-  res.setHeader("Access-Control-Allow-Private-Network", true);
-});
 global.server = server;
 const io = require("socket.io")(server, {
   pingInterval: 10000,
   pingTimeout: 5000,
   maxHttpBufferSize: 10000000000,
   allowEIO3: true, // 兼容 Socket.IO 2.x
-  // 跨域问题
+  // 跨域问题(Socket.IO 3.x 使用这种方式)
   cors: {
-    origin: "*",
+    // origin: "*", 
+    // 兼容 Socket.IO 2.x
+    origin: (requestOrigin, callback) => {
+      // 允许所有域名连接
+      callback(null, requestOrigin);
+    },
     methods: "GET, POST, PUT, DELETE, OPTIONS",
     allowedHeaders: "*",
     // 详情参数见 https://www.npmjs.com/package/cors
-    credentials: false,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
+    credentials: false
   },
 });
 global.io = io;
