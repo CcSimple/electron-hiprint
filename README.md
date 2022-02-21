@@ -3,6 +3,12 @@
 
 ## 预览 <a href="https://ccsimple.gitee.io/vue-plugin-hiprint/">vue-plugin-hiprint demo</a>
 
+<div align="center">
+
+![image](./res/tool.jpeg)
+
+</div>
+
 ## 调试/打包
 ```console
 git clone https://github.com/CcSimple/electron-hiprint.git
