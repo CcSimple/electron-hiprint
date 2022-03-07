@@ -76,7 +76,7 @@ async function createWindow() {
     height: 200,
     minWidth: 380,
     minHeight: 100,
-    titleBarStyle: "hidden", // 标题栏样式
+    titleBarStyle: "customButtonsOnHover", // 标题栏样式
     // show: false, // 不显示窗口
     transparent: true, // 透明标题栏
     center: true, // 居中
