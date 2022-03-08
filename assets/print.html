@@ -20,12 +20,8 @@
         ipcRenderer.on("print-new", (event, data) => {
           document.title = data.title ? data.title : "hiprint打印";
           document.getElementById("printElement").innerHTML = data.html;
-          ipcRenderer.send("do", {
-            printer: data.printer,
-            templateId: data.templateId,
-            socketId: data.socketId,
-            pageNum: $(".hiprint-printPaper").length,
-          });
+          data.pageNum = $(".hiprint-printPaper").length;
+          ipcRenderer.send("do", data);
         });
       });
     </script>

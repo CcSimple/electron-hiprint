@@ -103,18 +103,24 @@ function initPrintEvent() {
     // 打印 详见https://www.electronjs.org/zh/docs/latest/api/web-contents
     PRINT_WINDOW.webContents.print(
       {
-        silent: true,
-        printBackground: true,
-        deviceName: deviceName,
+        silent: data.silent || true, // 静默打印
+        printBackground: data.printBackground || true, // 是否打印背景
+        deviceName: deviceName, // 打印机名称
+        color: data.color || true, // 是否打印颜色
         margins: data.margins || {
           marginType: "none",
-        },
-        landscape: data.landscape || false,
-        copies: data.copies || 1,
-        dpi: data.dpi,
-        header: data.header,
-        footer: data.footer,
-        pageSize: data.pageSize,
+        }, // 边距
+        landscape: data.landscape || false, // 是否横向打印
+        scaleFactor: data.scaleFactor || 1, // 打印缩放比例
+        pagesPerSheet: data.pagesPerSheet || 1, // 每张纸的页数
+        collate: data.collate || true, // 是否排序
+        copies: data.copies || 1, // 打印份数
+        pageRanges: data.pageRanges || {}, // 打印页数
+        duplexMode: data.duplexMode, // 打印模式 simplex,shortEdge,longEdge
+        dpi: data.dpi,  // 打印机DPI
+        header: data.header, // 打印头
+        footer: data.footer, // 打印尾
+        pageSize: data.pageSize, // 打印纸张
       },
       (printResult) => {
         if (socket) {
