@@ -111,7 +111,7 @@ function initPrintEvent() {
           marginType: "none",
         }, // 边距
         landscape: data.landscape || false, // 是否横向打印
-        scaleFactor: data.scaleFactor || 1, // 打印缩放比例
+        scaleFactor: data.scaleFactor || 100, // 打印缩放比例
         pagesPerSheet: data.pagesPerSheet || 1, // 每张纸的页数
         collate: data.collate || true, // 是否排序
         copies: data.copies || 1, // 打印份数
@@ -122,7 +122,9 @@ function initPrintEvent() {
         footer: data.footer, // 打印尾
         pageSize: data.pageSize, // 打印纸张
       },
-      (printResult) => {
+      (printResult,info) => {
+        console.log(printResult);
+        console.log(info);
         if (socket) {
           socket.emit("successs", {
             msg: "打印机成功",
