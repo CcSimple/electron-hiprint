@@ -49,6 +49,10 @@ async function initSocketIo() {
         PRINT_WINDOW.webContents.send("print-new", data);
       }
     });
+    // 刷新打印机列表
+    client.on("refreshPrinterList", (data) => {
+      client.emit("printerList", MAIN_WINDOW.webContents.getPrinters());
+    });
   });
   try {
     server.listen(17521);
