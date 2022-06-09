@@ -3,6 +3,7 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu } = require("electron");
 const path = require("path");
 const helper = require("./helper");
+const address = require("address");
 
 // 托盘
 async function initTray() {
@@ -52,6 +53,44 @@ async function initSocketIo() {
     // 刷新打印机列表
     client.on("refreshPrinterList", (data) => {
       client.emit("printerList", MAIN_WINDOW.webContents.getPrinters());
+    });
+    // 获取IP、IPV6、MAC地址、DNS
+    client.on("address", (type, ...args) => {
+      switch (type) {
+        case "ip":
+          client.emit("address", type, address.ip());
+          break;
+        case "ipv6":
+          client.emit("address", type, address.ipv6());
+          break;
+        case "mac":
+          address.mac(function (err, addr) {
+            client.emit("address", type, addr, err);
+          });
+          break;
+        case "dns":
+          address.dns(function (err, addr) {
+            client.emit("address", type, addr, err);
+          });
+          break;
+        case "interface":
+          client.emit("address", type, address.interface(...args));
+          break;
+        case "all":
+          address(function (err, addr) {
+            client.emit("address", type, addr, err);
+          });
+          break;
+        case "vboxnet":
+          address('vboxnet', function (err, addr) {
+            client.emit("address", type, addr, err);
+          });
+        default:
+          address('all', function (err, addr) {
+            client.emit("address", type, addr, err);
+          });
+          break;
+      }
     });
   });
   try {
