@@ -1,6 +1,6 @@
 {
   "name": "electron-hiprint",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "vue-plugin-hiprint client",
   "main": "main.js",
   "author": "CcSimple<840054486@qq.com>",
@@ -44,14 +44,14 @@
     },
     "mac": {
       "icon": "./build/icons/icon.icns",
-      "artifactName": "tool_print_mac_${arch}(${productName}-${arch}-${version}).${ext}",
+      "artifactName": "${productName}_mac_${arch}-${version}.${ext}",
       "target": [
         "dmg"
       ]
     },
     "win": {
       "icon": "./build/icons/256x256.png",
-      "artifactName": "tool_print_win_${arch}(${productName}-${arch}-${version}).${ext}",
+      "artifactName": "${productName}_win_${arch}-${version}.${ext}",
       "target": [
         {
           "target": "nsis"
@@ -60,7 +60,7 @@
     },
     "linux": {
       "icon": "./build/icons/256x256.png",
-      "artifactName": "tool_print_linux_${arch}(${productName}-${arch}-${version}).${ext}",
+      "artifactName": "${productName}_linux_${arch}-${version}.${ext}",
       "target": [
         "tar.xz"
       ]
