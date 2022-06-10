@@ -13,6 +13,7 @@
     "build-m": "electron-builder -m",
     "build-m-arm64": "electron-builder -m --arm64",
     "build-l": "electron-builder -l tar.xz",
+    "build-l-arm64": "electron-builder -l --arm64",
     "compress": "node ./tools/code_compress --compress",
     "restore": "node ./tools/code_compress --restore"
   },
