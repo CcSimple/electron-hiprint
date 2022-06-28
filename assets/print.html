@@ -4,10 +4,43 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-    <link href="print-lock.css" rel="stylesheet">
-    <link href="print-lock.css" media="print" rel="stylesheet">
+    <link href="print-lock.css" rel="stylesheet" />
+    <link href="print-lock.css" media="print" rel="stylesheet" />
     <script>
       window.$ = window.jQuery = require("jquery");
+      $.fn.onImgLoaded = (cb) => {
+        let len = $("img").length;
+        let getUrl = (str) => {
+          let reg = /(https?|http|ftp|file):\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]/g;
+          let v = str.match(reg);
+          if (v && v.length) {
+            return v[0];
+          }
+          return "";
+        };
+        $("img").each((i, e) => {
+          let $img = $(e);
+          let img = new Image();
+          let src = $img.attr("src");
+          if (!new RegExp("[a-zA-z]+://[^\s]*").test(src)) {
+            src = getUrl($img.attr("style") || "");
+          }
+          img.src = src;
+          if (img.complete) {
+            len--;
+            if (len <= 0) {
+              cb();
+            }
+          } else {
+            img.onload = () => {
+              len--;
+              if (len <= 0) {
+                cb();
+              }
+            };
+          }
+        });
+      };
     </script>
   </head>
 
@@ -21,7 +54,10 @@
           document.title = data.title ? data.title : "hiprint打印";
           document.getElementById("printElement").innerHTML = data.html;
           data.pageNum = $(".hiprint-printPaper").length;
-          ipcRenderer.send("do", data);
+          $.fn.onImgLoaded(() => {
+            ipcRenderer.send("do", data);
+          });
+          console.log("print-new");
         });
       });
     </script>
