@@ -64,12 +64,12 @@ async function initSocketIo() {
           client.emit("address", type, address.ipv6());
           break;
         case "mac":
-          address.mac(function (err, addr) {
+          address.mac(function(err, addr) {
             client.emit("address", type, addr, err);
           });
           break;
         case "dns":
-          address.dns(function (err, addr) {
+          address.dns(function(err, addr) {
             client.emit("address", type, addr, err);
           });
           break;
@@ -77,16 +77,16 @@ async function initSocketIo() {
           client.emit("address", type, address.interface(...args));
           break;
         case "all":
-          address(function (err, addr) {
+          address(function(err, addr) {
             client.emit("address", type, addr, err);
           });
           break;
         case "vboxnet":
-          address('vboxnet', function (err, addr) {
+          address("vboxnet", function(err, addr) {
             client.emit("address", type, addr, err);
           });
         default:
-          address('all', function (err, addr) {
+          address("all", function(err, addr) {
             client.emit("address", type, addr, err);
           });
           break;
@@ -160,12 +160,12 @@ function initPrintEvent() {
         copies: data.copies || 1, // 打印份数
         pageRanges: data.pageRanges || {}, // 打印页数
         duplexMode: data.duplexMode, // 打印模式 simplex,shortEdge,longEdge
-        dpi: data.dpi,  // 打印机DPI
+        dpi: data.dpi, // 打印机DPI
         header: data.header, // 打印头
         footer: data.footer, // 打印尾
         pageSize: data.pageSize, // 打印纸张
       },
-      (printResult,info) => {
+      (printResult, info) => {
         console.log(printResult);
         console.log(info);
         if (socket) {
