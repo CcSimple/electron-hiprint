@@ -8,11 +8,14 @@
     <link href="print-lock.css" media="print" rel="stylesheet" />
     <script>
       window.$ = window.jQuery = require("jquery");
-      $.fn.onImgLoaded = (cb) => {
+      $.fn.onImgLoaded = (callback) => {
+        let cb = (len) => {
+          if (len <= 0) {
+            callback();
+          }
+        };
         let len = $("img").length;
-        if (len <= 0) {
-          cb();
-        }
+        cb(len);
         let getUrl = (str) => {
           let reg = /(https?|http|ftp|file):\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]/g;
           let v = str.match(reg);
@@ -31,15 +34,15 @@
           img.src = src;
           if (img.complete || src == "") {
             len--;
-            if (len <= 0) {
-              cb();
-            }
+            cb(len);
           } else {
             img.onload = () => {
               len--;
-              if (len <= 0) {
-                cb();
-              }
+              cb(len);
+            };
+            img.onerror = () => {
+              len--;
+              cb(len);
             };
           }
         });
