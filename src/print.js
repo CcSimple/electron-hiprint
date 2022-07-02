@@ -4,6 +4,7 @@ const { app, BrowserWindow, ipcMain, Tray, Menu } = require("electron");
 const path = require("path");
 const helper = require("./helper");
 const address = require("address");
+const ipp = require("ipp");
 
 // 托盘
 async function initTray() {
@@ -90,6 +91,75 @@ async function initSocketIo() {
             client.emit("address", type, addr, err);
           });
           break;
+      }
+    });
+    // ipp打印 详见：https://www.npmjs.com/package/ipp
+    client.on("ippPrint", (options) => {
+      try {
+        console.log(options);
+        const { url, opt, action, message } = options;
+        let printer = ipp.Printer(url, opt);
+        client.emit("ippPrinterConnected", printer);
+        let msg = Object.assign(
+          {
+            "operation-attributes-tag": {
+              "requesting-user-name": "hiPrint",
+            },
+          },
+          message
+        );
+        // data 必须是 Buffer
+        if (msg.data && !Buffer.isBuffer(msg.data)) {
+          if ("string" == typeof msg.data) {
+            msg.data = Buffer.from(msg.data, msg.encoding || "utf-8");
+          } else {
+            msg.data = Buffer.from(msg.data);
+          }
+        }
+        /**
+         * action: Get-Printer-Attributes 获取打印机支持参数
+         * action: Print-Job 新建打印任务
+         * action: Cancel-Job 取消打印任务
+         */
+        printer.execute(action, msg, (err, res) => {
+          client.emit(
+            "ippPrinterCallback",
+            err ? { type: err.name, msg: err.message } : null,
+            res
+          );
+        });
+      } catch (err) {
+        console.log("ippPrintError");
+        console.log(err);
+        client.emit("ippPrinterCallback", {
+          type: err.name,
+          msg: err.message,
+        });
+      }
+    });
+    // ipp request
+    client.on("ippRequest", (options) => {
+      try {
+        console.log(options);
+        const { url, data } = options;
+        let _data = ipp.serialize(data);
+        console.log(url);
+        console.log(data);
+        console.log(_data);
+        ipp.request(url, _data, function(err, res) {
+          client.emit(
+            "ippRequestCallback",
+            err ? { type: err.name, msg: err.message } : null,
+            res
+          );
+        });
+      } catch (err) {
+        console.log("ippRequestError");
+        console.log(err);
+        client.emit("ippRequestCallback", {
+          type: err.name,
+          msg: err.message,
+        });
       }
     });
   });
