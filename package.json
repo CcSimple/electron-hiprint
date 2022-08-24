@@ -42,7 +42,8 @@
       "installerHeaderIcon": "./build/icons/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Hiprint"
+      "shortcutName": "Hiprint",
+      "include": "installer.nsh"
     },
     "mac": {
       "icon": "./build/icons/icon.icns",
@@ -66,7 +67,15 @@
       "target": [
         "tar.xz"
       ]
-    }
+    },
+    "protocols": [
+      {
+        "name": "hiprint",
+        "schemes": [
+          "hiprint"
+        ]
+      }
+    ]
   },
   "dependencies": {
     "address": "^1.2.0",
