@@ -1,14 +1,65 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>hiprint</title>
-    <link rel="stylesheet" href="./style.css" />
-  </head>
+	<head>
+		<meta charset="UTF-8" />
+		<title>hiprint</title>
+		<link rel="stylesheet" href="./style.css" />
+	</head>
 
-  <body>
-    <div class="title">
-      HiPrint
-    </div>
-  </body>
+	<body>
+		<div class="box">
+			<div class="background">
+				<div class="bg-primary active"></div>
+				<div class="bg-success"></div>
+				<div class="bg-warning"></div>
+			</div>
+			<div class="container">
+				<div class="info">
+					<div class="title">打印服务已启动</div>
+					<div class="message row">服务地址：<span id="ipAddress"></span></div>
+					<div class="message row">MAC地址：<span id="macAddress"></span></div>
+				</div>
+				<div class="status">
+					<div class="message">连接状态：<span id="connectionStatus">未连接</span></div>
+					<div class="message">打印状态：<span id="printedQueue">空闲</span></div>
+					<div class="message row">设备编号：<span id="deviceId"></span></div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			const $ = require("jquery");
+			const { ipcRenderer } = require("electron");
+			let ipc = ipcRenderer;
+			window.onload = () => {
+				ipc.send("getMachineId");
+				ipc.on("machineId", (event, arg) => {
+					$("#deviceId").html(arg);
+				});
+				ipc.send("getAddress");
+				ipc.on("address", (event, arg) => {
+					$("#ipAddress").html(`http://${arg.ip}:17521`);
+					$("#macAddress").html(arg.mac);
+				});
+				ipc.on("connection", socketActive);
+				ipc.on("printTask", (event, arg) => {
+					if (arg === 0) {
+						$("#printedQueue").html("空闲");
+						$(".bg-warning").removeClass("active");
+					} else {
+						$("#printedQueue").html("文档打印中");
+						$(".bg-warning").addClass("active");
+					}
+				});
+			};
+			function socketActive(event, arg) {
+				if (arg.length === 0) {
+					$("#connectionStatus").html("未连接");
+					$(".bg-success").removeClass("active");
+				} else {
+					$("#connectionStatus").html(`已建立 ${arg.length} 条连接`);
+					$(".bg-success").addClass("active");
+				}
+			}
+		</script>
+	</body>
 </html>
