@@ -79,14 +79,16 @@
   },
   "dependencies": {
     "address": "^1.2.0",
+    "concurrent-tasks": "^1.0.7",
     "ipp": "^2.0.1",
     "jquery": "^3.6.0",
+    "node-machine-id": "^1.1.12",
     "socket.io": "^3.1.0",
     "socket.io-client": "^3.1.0"
   },
   "devDependencies": {
     "electron": "^13.6.9",
-    "electron-builder": "22.10.4",
+    "electron-builder": "23.0.6",
     "fs-extra": "^9.1.0",
     "prettier": "^1.16.4",
     "uglify-js": "^3.14.3"
