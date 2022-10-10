@@ -28,7 +28,7 @@
           let $img = $(e);
           let img = new Image();
           let src = $img.attr("src");
-          if (!new RegExp("[a-zA-z]+://[^\s]*").test(src)) {
+          if (!new RegExp("[a-zA-Z]+://[^\s]*").test(src)) {
             src = getUrl($img.attr("style") || "");
           }
           img.src = src;
