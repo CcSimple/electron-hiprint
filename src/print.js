@@ -141,11 +141,7 @@ async function initSocketIo() {
          * action: Cancel-Job 取消打印任务
          */
         printer.execute(action, msg, (err, res) => {
-          client.emit(
-            "ippPrinterCallback",
-            err ? { type: err.name, msg: err.message } : null,
-            res
-          );
+          client.emit("ippPrinterCallback", err ? { type: err.name, msg: err.message } : null, res);
         });
       } catch (err) {
         client.emit("ippPrinterCallback", {
@@ -160,11 +156,7 @@ async function initSocketIo() {
         const { url, data } = options;
         let _data = ipp.serialize(data);
         ipp.request(url, _data, function(err, res) {
-          client.emit(
-            "ippRequestCallback",
-            err ? { type: err.name, msg: err.message } : null,
-            res
-          );
+          client.emit("ippRequestCallback", err ? { type: err.name, msg: err.message } : null, res);
         });
       } catch (err) {
         client.emit("ippRequestCallback", {
@@ -220,18 +212,20 @@ function initPrintEvent() {
     const printers = PRINT_WINDOW.webContents.getPrinters();
     let havePrinter = false;
     let defaultPrinter = "";
+    let printerError = false;
     printers.forEach((element) => {
       if (element.name === data.printer) {
-        if (element.status != 0) {
-          if (socket) {
-            socket.emit("error", {
-              msg: data.printer + "打印机异常",
-              templateId: data.templateId,
-            });
-            // 通过taskMap 调用 task done 回调
-            taskMap[data.taskId]();
+        // todo: 打印机状态对照表
+        // win32: https://learn.microsoft.com/en-us/windows/win32/printdocs/printer-info-2
+        // cups: https://www.cups.org/doc/cupspm.html#ipp_status_e
+        if (process.platform === "win32") {
+          if (element.status != 0) {
+            printerError = true;
           }
-          return;
+        } else {
+          if (element.status != 3) {
+            printerError = true;
+          }
         }
         havePrinter = true;
       }
@@ -239,6 +233,16 @@ function initPrintEvent() {
         defaultPrinter = element.name;
       }
     });
+    if (printerError) {
+      socket &&
+        socket.emit("error", {
+          msg: data.printer + "打印机异常",
+          templateId: data.templateId,
+        });
+      // 通过taskMap 调用 task done 回调
+      taskMap[data.taskId]();
+      return;
+    }
     let deviceName = havePrinter ? data.printer : defaultPrinter;
     // 打印 详见https://www.electronjs.org/zh/docs/latest/api/web-contents
     PRINT_WINDOW.webContents.print(
