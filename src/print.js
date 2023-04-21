@@ -2,7 +2,10 @@
 
 const { app, BrowserWindow, ipcMain, Tray, Menu } = require("electron");
 const path = require("path");
+const os = require("os");
+const fs = require("fs");
 const helper = require("./helper");
+const printPdf = require("./pdf-print");
 const address = require("address");
 const ipp = require("ipp");
 const TaskRunner = require("concurrent-tasks");
@@ -244,47 +247,81 @@ function initPrintEvent() {
       return;
     }
     let deviceName = havePrinter ? data.printer : defaultPrinter;
-    // 打印 详见https://www.electronjs.org/zh/docs/latest/api/web-contents
-    PRINT_WINDOW.webContents.print(
-      {
-        silent: data.silent ?? true, // 静默打印
-        printBackground: data.printBackground ?? true, // 是否打印背景
-        deviceName: deviceName, // 打印机名称
-        color: data.color ?? true, // 是否打印颜色
-        margins: data.margins ?? {
-          marginType: "none",
-        }, // 边距
-        landscape: data.landscape ?? false, // 是否横向打印
-        scaleFactor: data.scaleFactor ?? 100, // 打印缩放比例
-        pagesPerSheet: data.pagesPerSheet ?? 1, // 每张纸的页数
-        collate: data.collate ?? true, // 是否排序
-        copies: data.copies ?? 1, // 打印份数
-        pageRanges: data.pageRanges ?? {}, // 打印页数
-        duplexMode: data.duplexMode, // 打印模式 simplex,shortEdge,longEdge
-        dpi: data.dpi, // 打印机DPI
-        header: data.header, // 打印头
-        footer: data.footer, // 打印尾
-        pageSize: data.pageSize, // 打印纸张
-      },
-      (success, failureReason) => {
-        if (socket) {
-          success
-            ? socket.emit("successs", {
+    let isPdf = data.type && `${data.type}`.toLowerCase() === "pdf";
+    if (isPdf) {
+      const pdfPath = path.join(os.tmpdir(), "hiprint", "temp.pdf");
+      fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
+      console.log(`PDF to ${pdfPath}`);
+      PRINT_WINDOW.webContents.printToPDF({}).then((pdfData) => {
+        fs.writeFileSync(pdfPath, pdfData);
+        console.log(`Wrote PDF successfully to ${pdfPath}`);
+        printPdf(pdfPath, deviceName, data)
+          .then(() => {
+            console.log(`print PDF success ??`);
+            socket &&
+              socket.emit("successs", {
                 msg: "打印机成功",
                 templateId: data.templateId,
-              })
-            : socket.emit("error", {
-                msg: failureReason,
+              });
+          })
+          .catch((err) => {
+            socket &&
+              socket.emit("error", {
+                msg: "打印失败: " + err.message,
                 templateId: data.templateId,
               });
+          })
+          .finally(() => {
+            // 通过taskMap 调用 task done 回调
+            taskMap[data.taskId]();
+            // 删除 task
+            delete taskMap[data.taskId];
+            MAIN_WINDOW.webContents.send("printTask", Object.keys(taskMap).length);
+          });
+      });
+    } else {
+      // 打印 详见https://www.electronjs.org/zh/docs/latest/api/web-contents
+      PRINT_WINDOW.webContents.print(
+        {
+          silent: data.silent ?? true, // 静默打印
+          printBackground: data.printBackground ?? true, // 是否打印背景
+          deviceName: deviceName, // 打印机名称
+          color: data.color ?? true, // 是否打印颜色
+          margins: data.margins ?? {
+            marginType: "none",
+          }, // 边距
+          landscape: data.landscape ?? false, // 是否横向打印
+          scaleFactor: data.scaleFactor ?? 100, // 打印缩放比例
+          pagesPerSheet: data.pagesPerSheet ?? 1, // 每张纸的页数
+          collate: data.collate ?? true, // 是否排序
+          copies: data.copies ?? 1, // 打印份数
+          pageRanges: data.pageRanges ?? {}, // 打印页数
+          duplexMode: data.duplexMode, // 打印模式 simplex,shortEdge,longEdge
+          dpi: data.dpi, // 打印机DPI
+          header: data.header, // 打印头
+          footer: data.footer, // 打印尾
+          pageSize: data.pageSize, // 打印纸张
+        },
+        (success, failureReason) => {
+          if (socket) {
+            success
+              ? socket.emit("successs", {
+                  msg: "打印机成功",
+                  templateId: data.templateId,
+                })
+              : socket.emit("error", {
+                  msg: failureReason,
+                  templateId: data.templateId,
+                });
+          }
+          // 通过taskMap 调用 task done 回调
+          taskMap[data.taskId]();
+          // 删除 task
+          delete taskMap[data.taskId];
+          MAIN_WINDOW.webContents.send("printTask", Object.keys(taskMap).length);
         }
-        // 通过taskMap 调用 task done 回调
-        taskMap[data.taskId]();
-        // 删除 task
-        delete taskMap[data.taskId];
-        MAIN_WINDOW.webContents.send("printTask", Object.keys(taskMap).length);
-      }
-    );
+      );
+    }
   });
 }
 
