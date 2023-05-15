@@ -1,4 +1,4 @@
-const { app, BrowserWindow, BrowserView, ipcMain, Menu } = require("electron");
+const { app, BrowserWindow, BrowserView, ipcMain, Tray, Menu } = require("electron");
 const path = require("path");
 const server = require("http").createServer();
 const helper = require("./src/helper");
