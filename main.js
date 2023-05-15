@@ -125,6 +125,8 @@ async function createWindow() {
       event.preventDefault();
     }
   });
+  // 托盘
+  await initTray();
   // 打印相关
   await printSetup();
 
@@ -168,5 +170,36 @@ ipcMain.on("getAddress", function(event) {
     event.sender.send("address", arg);
   });
 });
+
+// 托盘
+async function initTray() {
+  let trayPath = path.join(app.getAppPath(), "/assets/icons/tray.png");
+  APP_TRAY = new Tray(trayPath);
+  APP_TRAY.setToolTip("hiprint"); // 托盘标题
+  // 托盘菜单
+  let trayMenuTemplate = [
+    {
+      label: "退出",
+      click: () => {
+        MAIN_WINDOW.destroy();
+        APP_TRAY.destroy();
+        helper.appQuit();
+      },
+    },
+  ];
+  const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
+  APP_TRAY.setContextMenu(contextMenu);
+  // 监听点击事件
+  APP_TRAY.on("click", function() {
+    if (MAIN_WINDOW.isMinimized()) {
+      MAIN_WINDOW.restore();
+    }
+    if (!MAIN_WINDOW.isVisible()) {
+      MAIN_WINDOW.show();
+      MAIN_WINDOW.setSkipTaskbar(true);
+    }
+  });
+  return APP_TRAY;
+}
 
 initialize();
