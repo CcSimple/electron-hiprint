@@ -221,33 +221,48 @@ function initPrintEvent() {
       const pdfPath = path.join(os.tmpdir(), "hiprint", "temp.pdf");
       fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
       console.log(`PDF to ${pdfPath}`);
-      PRINT_WINDOW.webContents.printToPDF({}).then((pdfData) => {
-        fs.writeFileSync(pdfPath, pdfData);
-        console.log(`Wrote PDF successfully to ${pdfPath}`);
-        printPdf(pdfPath, deviceName, data)
-          .then(() => {
-            console.log(`print PDF success ??`);
-            socket &&
-              socket.emit("successs", {
-                msg: "打印机成功",
-                templateId: data.templateId,
-              });
-          })
-          .catch((err) => {
-            socket &&
-              socket.emit("error", {
-                msg: "打印失败: " + err.message,
-                templateId: data.templateId,
-              });
-          })
-          .finally(() => {
-            // 通过taskMap 调用 task done 回调
-            taskMap[data.taskId]();
-            // 删除 task
-            delete taskMap[data.taskId];
-            MAIN_WINDOW.webContents.send("printTask", Object.keys(taskMap).length);
-          });
-      });
+      PRINT_WINDOW.webContents
+        .printToPDF({
+          landscape: data.landscape ?? false, // 横向打印
+          displayHeaderFooter: data.displayHeaderFooter ?? false, // 显示页眉页脚
+          printBackground: data.printBackground ?? true, // 打印背景色
+          scale: data.scale ?? 1, // 渲染比例 默认 1
+          pageSize: data.pageSize,
+          margins: data.margins ?? {
+            marginType: "none",
+          }, // 边距
+          pageRanges: data.pageRanges, // 打印页数范围
+          headerTemplate: data.headerTemplate, // 页头模板 (html)
+          footerTemplate: data.footerTemplate, // 页脚模板 (html)
+          preferCSSPageSize: data.preferCSSPageSize ?? false,
+        })
+        .then((pdfData) => {
+          fs.writeFileSync(pdfPath, pdfData);
+          console.log(`Wrote PDF successfully to ${pdfPath}`);
+          printPdf(pdfPath, deviceName, data)
+            .then(() => {
+              console.log(`print PDF success ??`);
+              socket &&
+                socket.emit("successs", {
+                  msg: "打印机成功",
+                  templateId: data.templateId,
+                });
+            })
+            .catch((err) => {
+              socket &&
+                socket.emit("error", {
+                  msg: "打印失败: " + err.message,
+                  templateId: data.templateId,
+                });
+            })
+            .finally(() => {
+              // 通过taskMap 调用 task done 回调
+              taskMap[data.taskId]();
+              // 删除 task
+              delete taskMap[data.taskId];
+              MAIN_WINDOW.webContents.send("printTask", Object.keys(taskMap).length);
+            });
+        });
     } else {
       // 打印 详见https://www.electronjs.org/zh/docs/latest/api/web-contents
       PRINT_WINDOW.webContents.print(
