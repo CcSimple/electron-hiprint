@@ -107,7 +107,7 @@ eg: {height: 80 * 1000, width: 60 * 1000}
 
 > 因为打印网络pdf不存在模板拼接，所以打印时直接如下调用即可
 
-hiprint.hiwebSocket.send({printer, type: 'url_pdf', pdf_path: toPrint.data.pdf_url})
+hiprint.hiwebSocket.send({printer, type: 'url_pdf', pdf_path: '网络PDF的下载url'})
 
 ## 学习借鉴
 
