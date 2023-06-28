@@ -98,6 +98,16 @@ eg: {height: 80 * 1000, width: 60 * 1000}
     copies?: number; // 打印份数
 }
 ```
+## 下载网络pdf打印
+
+原理：
+
+1.通过node的http或https库下载网络pdf文件至用户临时目录
+2.后续内容同使用pdf打印功能
+
+> 因为打印网络pdf不存在模板拼接，所以打印时直接如下调用即可
+
+hiprint.hiwebSocket.send({printer, type: 'url_pdf', pdf_path: toPrint.data.pdf_url})
 
 ## 学习借鉴
 
