@@ -6,6 +6,20 @@ const printSetup = require("./src/print");
 const { machineIdSync } = require("node-machine-id");
 const address = require("address");
 
+// 设置开机自启动
+if (!app.isPackaged) {
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    openAsHidden: false,
+    path: process.execPath,
+    args: [path.resolve(process.argv[1])],
+  });
+} else {
+  app.setLoginItemSettings({
+    openAtLogin: true,
+  });
+}
+
 // 主进程
 global.MAIN_WINDOW = null;
 global.APP_TRAY = null;
