@@ -1,3 +1,9 @@
+<!--
+ * @Date: 2022-09-13 11:11:52
+ * @LastEditors: admin@54xavier.cn
+ * @LastEditTime: 2023-09-06 13:41:29
+ * @FilePath: \electron-hiprint\assets\index.html
+-->
 <!DOCTYPE html>
 <html>
   <head>
@@ -41,7 +47,7 @@
         });
         ipc.send("getAddress");
         ipc.on("address", (event, arg) => {
-          $("#ipAddress").html(`http://${arg.ip}:17521`);
+          $("#ipAddress").html(`http://${arg.ip}:${arg.port || 17521}`);
           $("#macAddress").html(arg.mac);
         });
         ipc.on("connection", socketActive);

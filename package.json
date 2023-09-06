@@ -33,6 +33,12 @@
     "electronDownload": {
       "mirror": "https://npmmirror.com/mirrors/electron/"
     },
+    "extraResources": [
+      {
+        "from": "./config.json",
+        "to": "../"
+      }
+    ],
     "nsis": {
       "oneClick": false,
       "allowElevation": true,

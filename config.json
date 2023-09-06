@@ -1,0 +1,7 @@
+{
+  "openAtLogin": true,
+  "openAsHidden": true,
+  "port": "17521",
+  "token": null,
+  "closeType": "tray"
+}

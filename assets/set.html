@@ -1,0 +1,276 @@
+<!--
+ * @Date: 2023-09-05 13:56:58
+ * @LastEditors: admin@54xavier.cn
+ * @LastEditTime: 2023-09-06 13:20:13
+ * @FilePath: \electron-hiprint\assets\set.html
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/element-ui@2.15.14/lib/theme-chalk/index.min.css"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        user-select: none;
+      }
+
+      .el-form {
+        padding: 12px 22px;
+      }
+
+      .el-form-item {
+        margin-bottom: 8px;
+      }
+
+      .el-form--label-top .el-form-item__label {
+        padding: 0;
+      }
+
+      input[type="number"]::-webkit-outer-spin-button,
+      input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        appearance: none;
+        margin: 0;
+      }
+
+      button {
+        width: calc(50% - 8px);
+      }
+    </style>
+    <title>设置</title>
+  </head>
+
+  <body>
+    <div class="el-form el-form--label-top">
+      <form id="form" action="#">
+        <div class="el-form-item is-required">
+          <div class="el-form-item__label">端口设置</div>
+          <div class="el-form-item__content">
+            <div class="el-input el-input--small">
+              <input
+                id="port"
+                name="port"
+                type="number"
+                min="10000"
+                max="65535"
+                class="el-input__inner"
+                placeholder="请输入10000-65535之间的端口号"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="el-form-item">
+          <div class="el-form-item__label">TOKEN 设置</div>
+          <div class="el-form-item__content">
+            <div class="el-input el-input--small">
+              <input
+                id="token"
+                name="token"
+                type="text"
+                minlength="5"
+                maxlength="32"
+                class="el-input__inner"
+                placeholder="请输入5-32个字符作为TOKEN"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="el-row">
+          <div class="el-col el-col-16">
+            <div class="el-form-item">
+              <div class="el-form-item__label">开机启动</div>
+              <div class="el-form-item__content">
+                <div class="el-switch">
+                  <input
+                    id="openAtLogin"
+                    name="openAtLogin"
+                    type="checkbox"
+                    class="el-switch__input"
+                    checked="false"
+                    value="true"
+                  />
+                  <span class="el-switch__core"></span>
+                </div>
+                <span>(请注意杀毒软件拦截)</span>
+              </div>
+            </div>
+          </div>
+          <div class="el-col el-col-8">
+            <div class="el-form-item">
+              <div class="el-form-item__label">自启后最小化</div>
+              <div class="el-form-item__content">
+                <div class="el-switch">
+                  <input
+                    id="openAsHidden"
+                    name="openAsHidden"
+                    type="checkbox"
+                    class="el-switch__input"
+                    checked="false"
+                    value="true"
+                  />
+                  <span class="el-switch__core"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="el-form-item">
+          <div class="el-form-item__label">关闭主窗口</div>
+          <div class="el-form-item__content">
+            <div id="closeType" class="el-radio-group">
+              <label class="el-radio">
+                <span class="el-radio__input">
+                  <span class="el-radio__inner"></span>
+                  <input
+                    name="closeType"
+                    type="radio"
+                    class="el-radio__original"
+                    checked="false"
+                    value="tray"
+                  />
+                </span>
+                <span class="el-radio__label">最小化到托盘</span>
+              </label>
+              <label class="el-radio">
+                <span class="el-radio__input">
+                  <span class="el-radio__inner"></span>
+                  <input
+                    name="closeType"
+                    type="radio"
+                    class="el-radio__original"
+                    checked="false"
+                    value="quit"
+                  />
+                </span>
+                <span class="el-radio__label">退出程序</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="el-form-item">
+          <div class="el-form-item__content">
+            <button
+              type="submit"
+              class="el-button el-button--primary el-button--mini"
+            >
+              <span>应用</span>
+            </button>
+            <button
+              id="close"
+              class="el-button el-button--default el-button--mini"
+            >
+              <span>关闭</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <script>
+      window.$ = window.jQuery = require("jquery");
+      const { ipcRenderer } = require("electron");
+      let ipc = ipcRenderer;
+      $(document).ready(() => {
+        // 为所有input添加change事件
+        $("input").on("change", function() {
+          // radio 单选类型需要切换 parent 元素的 class 修改选中样式
+          if ($(this).attr("type") === "radio") {
+            $(this)
+              .parents(".el-radio__input")
+              .addClass("is-checked");
+            $(this)
+              .parents(".el-radio")
+              .siblings()
+              .find(".el-radio__input")
+              .removeClass("is-checked");
+          }
+        });
+        // 开关无法由input触发change事件，所以需要手动绑定click事件
+        $(".el-switch").click(function() {
+          // 获取开关对应input元素
+          var input = $(this).find("input");
+          // 获取开关状态值
+          var val = input.prop('checked');
+          // 设置开关值
+          input.prop("checked", !val);
+          // 触发change事件
+          input.trigger("change");
+          // 切换开关样式
+          if (val) {
+            $(this).removeClass("is-checked");
+          } else {
+            $(this).addClass("is-checked");
+          }
+        });
+        // 表单提交事件
+        $("#form").submit(function(event) {
+          // 阻止表单默认提交事件
+          event.preventDefault();
+          // 获取表单数据
+          var formDataArr = $(this).serializeArray();
+          var formData = {
+            openAtLogin: false, // 开机启动添加默认值 false，开机启动状态为false时序列化方法获取不到
+            openAsHidden: false, // 自启后最小化添加默认值 false，自启后最小化状态为false时序列化方法获取不到
+          };
+          formDataArr.forEach((item) => {
+            switch (item.name) {
+              case "port":
+              case "closeType":
+                formData[item.name] = item.value;
+                break;
+              case "token":
+                formData[item.name] = item.value || null;
+                break;
+              case "openAtLogin":
+              case "openAsHidden":
+                formData[item.name] = item.value === "true";
+                break;
+            }
+          });
+          // 让页面主进程执行 setConfig 方法
+          ipc.send("setConfig", formData);
+        });
+        $("button#close").click(function(event) {
+          event.preventDefault();
+          ipc.send("closeSetWindow");
+        });
+        // 请求配置信息
+        ipc.send("getConfig");
+        // 监听配置信息
+        ipc.on("onConfig", (event, data) => {
+          Object.keys(data).forEach((key) => {
+            switch (key) {
+              case "port":
+              case "token":
+                $(`#${key}`).val(data[key]);
+                break;
+              case "openAtLogin":
+              case "openAsHidden":
+                if (data[key]) {
+                  $(`#${key}`)
+                    .parent()
+                    .addClass("is-checked");
+                  $(`#${key}`).prop("checked", true);
+                } else {
+                  $(`#${key}`).prop("checked", false);
+                }
+                break;
+              case "closeType":
+                $(`#${key} input[value=${data[key]}]`).prop("checked", true);
+                $(`#${key} input[value=${data[key]}]`)
+                  .parents(".el-radio__input")
+                  .addClass("is-checked");
+                break;
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

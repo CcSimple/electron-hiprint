@@ -113,7 +113,11 @@ async function initSocketIo() {
          * action: Cancel-Job 取消打印任务
          */
         printer.execute(action, msg, (err, res) => {
-          client.emit("ippPrinterCallback", err ? { type: err.name, msg: err.message } : null, res);
+          client.emit(
+            "ippPrinterCallback",
+            err ? { type: err.name, msg: err.message } : null,
+            res
+          );
         });
       } catch (err) {
         client.emit("ippPrinterCallback", {
@@ -128,7 +132,11 @@ async function initSocketIo() {
         const { url, data } = options;
         let _data = ipp.serialize(data);
         ipp.request(url, _data, function(err, res) {
-          client.emit("ippRequestCallback", err ? { type: err.name, msg: err.message } : null, res);
+          client.emit(
+            "ippRequestCallback",
+            err ? { type: err.name, msg: err.message } : null,
+            res
+          );
         });
       } catch (err) {
         client.emit("ippRequestCallback", {
@@ -154,9 +162,9 @@ async function initSocketIo() {
     MAIN_WINDOW.webContents.send("connection", socketList);
   });
   try {
-    server.listen(17521);
+    server.listen(PLUGIN_CONFIG.port || 17521);
   } catch (error) {
-    alert("服务已开启/端口被占用");
+    console.error("===>", error)
   }
 }
 
@@ -260,7 +268,10 @@ function initPrintEvent() {
               taskMap[data.taskId]();
               // 删除 task
               delete taskMap[data.taskId];
-              MAIN_WINDOW.webContents.send("printTask", Object.keys(taskMap).length);
+              MAIN_WINDOW.webContents.send(
+                "printTask",
+                Object.keys(taskMap).length
+              );
             });
         });
       return;
@@ -289,7 +300,10 @@ function initPrintEvent() {
           taskMap[data.taskId]();
           // 删除 task
           delete taskMap[data.taskId];
-          MAIN_WINDOW.webContents.send("printTask", Object.keys(taskMap).length);
+          MAIN_WINDOW.webContents.send(
+            "printTask",
+            Object.keys(taskMap).length
+          );
         });
       return;
     }
