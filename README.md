@@ -41,6 +41,35 @@ npm run build-w-64
    - 主要参数 html: 及 html 字符串，templateId: 用于回调 successs/error 时的标识
    - printer: 打印机名称，pageSize: 打印纸张大小 (其他参数,见下面的示例)
 
+## 打印端设置
+
+### v1.0.8 之后版本允许通过修改 config.json 设置端口号、token等
+
+可在安装路径中修改 `config.json` 文件修改设置，亦或者修改项目文件后重新打包。
+
+也可以右键托盘，选择 `设置` 后在 `设置` 窗口中进行设置。
+
+![image](./res/set.png)
+
+```js
+{
+    "port": "17521",          // 端口号
+    "token": null,            // 用于身份校验
+    "closeType": "tray",      // 主窗口关闭类型
+    "openAtLogin": true,      // 登录时打开应用程序
+    "openAsHidden": true,     // 以隐藏方式打开应用程序
+}
+```
+
+1. `prot` String | Number ( 10000 - 65535 ) 端口号默认为 `17521`
+2. `token` String( * | null ) 身份校验，只支持固定 token，需要登录等验证请自行二开实现
+    - [vue-plugin-hiprint](https://github.com/CcSimple/vue-plugin-hiprint.git) 需要使用 [0.0.55](https://www.npmjs.com/package/vue-plugin-hiprint?activeTab=versions) 之后的版本
+3. `closeType` String( `tray` | `quit` ) 关闭主窗口后
+    - 最小化到托盘 `tray`
+    - 退出程序 `quit`
+4. `openAtLogin` Boolean 系统登录时自启动应用
+5. `openAsHidden` Boolean 自启动时以隐藏方式打开应用
+
 ## 默认打印参数说明
 
 ```js

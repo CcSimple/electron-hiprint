@@ -1,35 +1,31 @@
-const { app, BrowserWindow, BrowserView, ipcMain, Tray, Menu } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  BrowserView,
+  ipcMain,
+  Tray,
+  Menu,
+} = require("electron");
 const path = require("path");
 const server = require("http").createServer();
 const helper = require("./src/helper");
 const printSetup = require("./src/print");
+const setSetup = require("./src/set");
+const { readConfig } = require("./tools/file");
 const { machineIdSync } = require("node-machine-id");
 const address = require("address");
-
-// 设置开机自启动
-if (!app.isPackaged) {
-  app.setLoginItemSettings({
-    openAtLogin: true,
-    openAsHidden: false,
-    path: process.execPath,
-    args: [path.resolve(process.argv[1])],
-  });
-} else {
-  app.setLoginItemSettings({
-    openAtLogin: true,
-  });
-}
 
 // 主进程
 global.MAIN_WINDOW = null;
 global.APP_TRAY = null;
-global.CAN_QUIT = false;
 
 // 打印窗口
 global.PRINT_WINDOW = null;
+global.SET_WINDOW = null;
 
 global.server = server;
-const io = require("socket.io")(server, {
+
+const io = new require("socket.io")(server, {
   pingInterval: 10000,
   pingTimeout: 5000,
   maxHttpBufferSize: 10000000000,
@@ -48,6 +44,7 @@ const io = require("socket.io")(server, {
     credentials: false,
   },
 });
+
 global.io = io;
 
 global.socketStore = {};
@@ -66,6 +63,20 @@ async function initialize() {
       }
       MAIN_WINDOW.focus();
     }
+  });
+  // 获取设备唯一id
+  ipcMain.on("getMachineId", function(event) {
+    event.sender.send("machineId", machineIdSync({ original: true }));
+  });
+
+  // 获取设备ip、mac等信息
+  ipcMain.on("getAddress", function(event) {
+    address(function(err, arg) {
+      event.sender.send("address", {
+        ...arg,
+        port: global.PLUGIN_CONFIG?.port,
+      });
+    });
   });
   // 当electron完成初始化
   app.whenReady().then(() => {
@@ -125,7 +136,9 @@ async function createWindow() {
   // 加载主页面
   let indexHtml = path.join("file://", __dirname, "/assets/index.html");
   MAIN_WINDOW.webContents.loadURL(indexHtml);
-  // MAIN_WINDOW.webContents.openDevTools();
+  if (!app.isPackaged) {
+    MAIN_WINDOW.webContents.openDevTools();
+  }
   // 退出
   MAIN_WINDOW.on("closed", () => {
     MAIN_WINDOW = null;
@@ -133,10 +146,15 @@ async function createWindow() {
   });
   // 点击关闭，最小化到托盘
   MAIN_WINDOW.on("close", (event) => {
-    if (!CAN_QUIT) {
+    if (PLUGIN_CONFIG.closeType === "tray") {
       MAIN_WINDOW.hide();
       MAIN_WINDOW.setSkipTaskbar(true); // 隐藏任务栏
       event.preventDefault();
+    } else {
+      SET_WINDOW && SET_WINDOW.destroy();
+      MAIN_WINDOW && MAIN_WINDOW.destroy();
+      APP_TRAY && APP_TRAY.destroy();
+      helper.appQuit();
     }
   });
   // 托盘
@@ -173,18 +191,6 @@ async function systemSetup() {
   Menu.setApplicationMenu(null);
 }
 
-// 获取设备唯一id
-ipcMain.on("getMachineId", function(event) {
-  event.sender.send("machineId", machineIdSync({ original: true }));
-});
-
-// 获取设备ip、mac等信息
-ipcMain.on("getAddress", function(event) {
-  address(function(err, arg) {
-    event.sender.send("address", arg);
-  });
-});
-
 // 托盘
 async function initTray() {
   let trayPath = path.join(app.getAppPath(), "/assets/icons/tray.png");
@@ -193,10 +199,24 @@ async function initTray() {
   // 托盘菜单
   let trayMenuTemplate = [
     {
+      label: "设置",
+      click: () => {
+        if (!SET_WINDOW) {
+          setSetup();
+          SET_WINDOW.on("close", () => {
+            SET_WINDOW = null;
+          });
+        } else {
+          SET_WINDOW.show();
+        }
+      },
+    },
+    {
       label: "退出",
       click: () => {
-        MAIN_WINDOW.destroy();
-        APP_TRAY.destroy();
+        SET_WINDOW && SET_WINDOW.destroy();
+        MAIN_WINDOW && MAIN_WINDOW.destroy();
+        APP_TRAY && APP_TRAY.destroy();
         helper.appQuit();
       },
     },
@@ -216,4 +236,24 @@ async function initTray() {
   return APP_TRAY;
 }
 
-initialize();
+readConfig()
+  .then((PLUGIN_CONFIG) => {
+    global.PLUGIN_CONFIG = PLUGIN_CONFIG;
+    io.use((socket, next) => {
+      if (
+        PLUGIN_CONFIG.token &&
+        socket.handshake.auth.token != PLUGIN_CONFIG.token
+      ) {
+        const err = new Error("Authentication error");
+        err.data = {
+          content: "Token 错误，请检查客户端与服务器 Token 是否一致",
+        };
+        next(err);
+      } else {
+        next();
+      }
+    });
+  })
+  .finally(() => {
+    initialize();
+  });
