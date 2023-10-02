@@ -6,7 +6,7 @@
 
 <div align="center">
 
-![image](./res/tool.jpeg)
+![image](./res/electron-hiprint.png)
 
 </div>
 
@@ -49,26 +49,36 @@ npm run build-w-64
 
 也可以右键托盘，选择 `设置` 后在 `设置` 窗口中进行设置。
 
-![image](./res/set.png)
+![image](./res/electron-hiprint_set.png)
 
 ```js
 {
-    "port": "17521",          // 端口号
-    "token": null,            // 用于身份校验
-    "closeType": "tray",      // 主窗口关闭类型
-    "openAtLogin": true,      // 登录时打开应用程序
-    "openAsHidden": true,     // 以隐藏方式打开应用程序
+    "openAtLogin": true,                        // 登录时打开应用程序
+    "openAsHidden": true,                       // 以隐藏方式打开应用程序
+    "connectTransit": true,                     // 连接中转服务
+    "port": "17521",                            // 端口号
+    "token": null,                              // 身份验证 token
+    "transitUrl": "https://printjs.cn:17521",   // 中转服务地址
+    "transitToken": "vue-plugin-hiprint",       // 中转服务 token
+    "closeType": "tray"                         // 主窗口关闭类型
 }
 ```
 
-1. `prot` String | Number ( 10000 - 65535 ) 端口号默认为 `17521`
-2. `token` String( * | null ) 身份校验，只支持固定 token，需要登录等验证请自行二开实现
+1. `openAtLogin` Boolean 系统登录时自启动应用
+2. `openAsHidden` Boolean 自启动时以隐藏方式打开应用
+3. `connectTransit` Boolean 连接中转服务
+3. `prot` String | Number ( 10000 - 65535 ) 端口号默认为 `17521`
+4. `token` String( * | null ) 身份校验，只支持固定 token，需要登录等验证请自行二开实现
     - [vue-plugin-hiprint](https://github.com/CcSimple/vue-plugin-hiprint.git) 需要使用 [0.0.55](https://www.npmjs.com/package/vue-plugin-hiprint?activeTab=versions) 之后的版本
-3. `closeType` String( `tray` | `quit` ) 关闭主窗口后
+5. `transitUrl` 中转服务地址
+6. `transitToken` 中转服务 token
+7. `closeType` String( `tray` | `quit` ) 关闭主窗口后
     - 最小化到托盘 `tray`
     - 退出程序 `quit`
-4. `openAtLogin` Boolean 系统登录时自启动应用
-5. `openAsHidden` Boolean 自启动时以隐藏方式打开应用
+
+### 中转服务 [node-hiprint-transit](https://github.com/Xavier9896/node-hiprint-transit)
+
+node 编写的中转服务，解决 https 跨域问题，解决无法连接局域网设备问题，解决跨网段问题。实现云打印。
 
 ## 默认打印参数说明
 
@@ -127,7 +137,7 @@ eg: {height: 80 * 1000, width: 60 * 1000}
     copies?: number; // 打印份数
 }
 ```
-## 下载网络pdf打印
+## 下载网络 pdf 打印
 
 原理：
 
@@ -137,6 +147,45 @@ eg: {height: 80 * 1000, width: 60 * 1000}
 > 因为打印网络pdf不存在模板拼接，所以打印时直接如下调用即可
 
 hiprint.hiwebSocket.send({printer, type: 'url_pdf', pdf_path: '网络PDF的下载url'})
+
+## URLScheme `hiprint://`
+
+> 安装客户端时请 `以管理员身份运行` ，才能成功添加 URLScheme
+
+使用：浏览器地址栏输入 `hiprint://` 并回车
+
+![URLScheme](./res/URLScheme.png)
+
+```js
+// js
+window.open("hiprint://")
+
+// element-ui
+this.$alert(`连接【${hiwebSocket.host}】失败！<br>请确保目标服务器已<a href="https://gitee.com/CcSimple/electron-hiprint/releases" target="_blank"> 下载 </a> 并 <a href="hiprint://" target="_blank"> 运行 </a> 打印服务！`, "客户端未连接", {dangerouslyUseHtmlString: true})
+
+// ant-design
+this.$error({
+  title: "客户端未连接",
+  content: (h) => (
+    <div>
+      连接【{hiwebSocket.host}】失败！
+      <br />
+      请确保目标服务器已
+      <a
+        href="https://gitee.com/CcSimple/electron-hiprint/releases"
+        target="_blank"
+      >
+        下载
+      </a>
+      并
+      <a href="hiprint://" target="_blank">
+        运行
+      </a>
+      打印服务！
+    </div>
+  ),
+});
+```
 
 ## 学习借鉴
 
