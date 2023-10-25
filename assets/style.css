@@ -23,6 +23,7 @@ body {
   --primary: #409eff;
   --success: #67c23a;
   --warning: #e6a23c;
+  user-select: none;
 }
 
 .box {
@@ -82,20 +83,45 @@ body {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .title {
+  display: flex;
   width: 100%;
   font-size: 50px;
-  user-select: none;
+  align-items: center;
+}
+
+#seticon {
+  display: none;
+  cursor: pointer;
+  font-size: 32px;
+  line-height: 50px;
+  margin-left: 10px;
+  animation: rotatiing 2s linear infinite;
+  -webkit-animation: rotatiing 2s linear infinite;
+}
+
+.title:hover>#seticon {
+  display: inline-block;
 }
 
 .message {
   font-size: 12px;
   margin-bottom: 10px;
-  width: 50%;
 }
 
 .row {
   width: 100%;
+  flex: unset;
+}
+
+@keyframes rotatiing {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

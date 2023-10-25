@@ -1,7 +1,7 @@
 <!--
  * @Date: 2022-09-13 11:11:52
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2023-09-06 13:41:29
+ * @LastEditTime: 2023-10-09 16:33:55
  * @FilePath: \electron-hiprint\assets\index.html
 -->
 <!DOCTYPE html>
@@ -10,6 +10,10 @@
     <meta charset="UTF-8" />
     <title>hiprint</title>
     <link rel="stylesheet" href="./style.css" />
+    <link
+      rel="stylesheet"
+      href="./element-ui@2.15.14.theme-chalk.index.min.css"
+    />
   </head>
 
   <body>
@@ -21,15 +25,20 @@
       </div>
       <div class="container">
         <div class="info">
-          <div class="title">打印服务已启动</div>
+          <div class="title">
+            打印服务已启动<i id="seticon" class="el-icon-setting"></i>
+          </div>
           <div class="message row">服务地址：<span id="ipAddress"></span></div>
           <div class="message row">MAC地址：<span id="macAddress"></span></div>
         </div>
         <div class="status">
-          <div class="message">
-            连接状态：<span id="connectionStatus">未连接</span>
+          <div class="message" data-prop="transitStatus">
+            中转状态: <span id="transitStatus">未连接</span>
           </div>
-          <div class="message">
+          <div class="message" data-prop="connectionStatus">
+            本地连接：<span id="connectionStatus">未连接</span>
+          </div>
+          <div class="message" data-prop="printedQueue">
             打印状态：<span id="printedQueue">空闲</span>
           </div>
           <div class="message row">设备编号：<span id="deviceId"></span></div>
@@ -37,10 +46,20 @@
       </div>
     </div>
     <script type="text/javascript">
-      const $ = require("jquery");
-      const { ipcRenderer } = require("electron");
+      window.$ = window.jQuery = require("jquery");
+      const { ipcRenderer, clipboard } = require("electron");
       let ipc = ipcRenderer;
-      window.onload = () => {
+      $(document).ready(() => {
+        $("#seticon").click(() => {
+          ipc.send("openSetting");
+        });
+        $("#ipAddress,#macAddress,#deviceId").click((event) => {
+          clipboard.writeText(event.target.innerText);
+          ipc.send("notification", {
+            title: "复制成功",
+            body: "文本已成功复制到剪贴板中！",
+          });
+        });
         ipc.send("getMachineId");
         ipc.on("machineId", (event, arg) => {
           $("#deviceId").html(arg);
@@ -50,25 +69,24 @@
           $("#ipAddress").html(`http://${arg.ip}:${arg.port || 17521}`);
           $("#macAddress").html(arg.mac);
         });
-        ipc.on("connection", socketActive);
+        ipc.on("serverConnection", socketActive);
         ipc.on("printTask", (event, arg) => {
-          if (arg === 0) {
-            $("#printedQueue").html("空闲");
-            $(".bg-warning").removeClass("active");
-          } else {
-            $("#printedQueue").html("文档打印中");
-            $(".bg-warning").addClass("active");
-          }
+          $("#printedQueue").html(arg ? "文档打印中" : "空闲");
+          $(".bg-warning")[arg ? "addClass" : "removeClass"]("active");
         });
-      };
+        ipc.on("clientConnection", transitActive);
+      });
       function socketActive(event, arg) {
-        if (arg.length === 0) {
-          $("#connectionStatus").html("未连接");
-          $(".bg-success").removeClass("active");
-        } else {
-          $("#connectionStatus").html(`已建立 ${arg.length} 条连接`);
-          $(".bg-success").addClass("active");
-        }
+        console.log("socketActive", arg)
+        $("#connectionStatus").html(
+          `${arg ? "已建立 " + arg + " 条" : "未"}连接`
+        );
+        $(".bg-success")[arg ? "addClass" : "removeClass"]("active");
+      }
+      function transitActive(event, arg) {
+        console.log("transitActive", arg)
+        $("#transitStatus").html(`${arg ? "已" : "未"}连接`);
+        $(".bg-success")[arg ? "addClass" : "removeClass"]("active");
       }
     </script>
   </body>
