@@ -377,6 +377,15 @@ socket.on("error", (res) => {
 })
 ```
 
+## 断开连接
+
+```js
+socket.on("disconnect", () => {
+  globalThis.connect = false;
+  // TODO: Do something for your project
+})
+```
+
 ## URLScheme `hiprint://`
 
 通过 URLScheme 可以方便的让我们在 Web 项目中调起当前设备中安装的 `electron-hiprint` 客户端，以便未建立连接时主动唤起客户端。
