@@ -318,9 +318,6 @@ function initTray() {
 async function openSetWindow() {
   if (!SET_WINDOW) {
     await setSetup();
-    SET_WINDOW.on("closed", () => {
-      SET_WINDOW = null;
-    });
   } else {
     SET_WINDOW.show();
   }
