@@ -1,7 +1,7 @@
 /*
  * @Date: 2023-09-05 17:34:28
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2023-10-04 17:59:36
+ * @LastEditTime: 2023-10-30 14:07:22
  * @FilePath: \electron-hiprint\src\set.js
  */
 "use strict";
@@ -181,6 +181,7 @@ function removeEvent() {
   ipcMain.removeListener("showMessageBox", showMessageBox);
   ipcMain.removeListener("testTransit", testTransit);
   ipcMain.removeListener("closeSetWindow", closeSetWindow);
+  SET_WINDOW = null;
 }
 
 module.exports = async () => {
