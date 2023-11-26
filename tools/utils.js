@@ -29,12 +29,11 @@ function getSystem() {
 function getExePath() {
   if (app.isPackaged) {
     if (getSystem() === 1) {
-      return path.resolve(app.getPath("exe"), "../../");
-    } else {
-      return path.dirname(app.getPath("exe"));
+      return path.resolve(app.getAppPath(), "../../");
     }
+    return path.dirname(app.getPath("exe"));
   } else {
-    return path.resolve(__dirname, "..");
+    return path.resolve(__dirname, "../");
   }
 }
 
@@ -338,7 +337,7 @@ function initServeEvent(server) {
         PRINT_RUNNER.add((done) => {
           data.socketId = socket.id;
           data.taskId = new Date().getTime();
-          data.clientType = "local"
+          data.clientType = "local";
           PRINT_WINDOW.webContents.send("print-new", data);
           MAIN_WINDOW.webContents.send("printTask", true);
           PRINT_RUNNER_DONE[data.taskId] = done;
@@ -478,7 +477,7 @@ function initClientEvent() {
       PRINT_RUNNER.add((done) => {
         data.socketId = client.id;
         data.taskId = new Date().getTime();
-        data.clientType = "transit"
+        data.clientType = "transit";
         PRINT_WINDOW.webContents.send("print-new", data);
         MAIN_WINDOW.webContents.send("printTask", true);
         PRINT_RUNNER_DONE[data.taskId] = done;

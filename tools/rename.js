@@ -26,8 +26,6 @@ class ReName {
 
   rename(args) {
     let that = this;
-    console.log(that);
-    console.log(args);
     const pkgPath = path.join(that.basePath, "/package.json");
     let pkg = JSON.parse(fs.readFileSync(pkgPath));
     let version = pkg.version;
@@ -40,7 +38,6 @@ class ReName {
         that.dirs,
         `${productName}_${args["tag"]}-${version}${e}`
       );
-      console.log(file);
       if (fs.existsSync(file)) {
         console.log("exist ", file);
         console.log("rename ", nFile);
