@@ -1,10 +1,10 @@
 {
   "openAtLogin": true,
   "openAsHidden": true,
-  "connectTransit": true,
+  "connectTransit": false,
   "port": "17521",
-  "token": null,
-  "transitUrl": "https://printjs.cn:17521",
-  "transitToken": "vue-plugin-hiprint",
+  "token": "",
+  "transitUrl": "",
+  "transitToken": "",
   "closeType": "tray"
 }

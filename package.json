@@ -10,8 +10,9 @@
     "start": "electron .",
     "build-w": "electron-builder -w nsis:ia32 && node ./tools/rename --tag win_x32",
     "build-w-64": "electron-builder -w nsis:x64 && node ./tools/rename --tag win_x64",
-    "build-m": "electron-builder -m && node ./tools/rename --tag mac_x64",
+    "build-m": "electron-builder -m --x64 && node ./tools/rename --tag mac_x64",
     "build-m-arm64": "electron-builder -m --arm64 && node ./tools/rename --tag mac_arm64",
+    "build-m-universal": "electron-builder -m --universal && node ./tools/rename --tag mac_universal",
     "build-l": "electron-builder -l tar.xz && node ./tools/rename --tag linux_64",
     "build-l-arm64": "electron-builder -l --arm64 && node ./tools/rename --tag linux_arm64",
     "compress": "node ./tools/code_compress --compress",
@@ -33,10 +34,10 @@
     "electronDownload": {
       "mirror": "https://npmmirror.com/mirrors/electron/"
     },
-    "extraResources": [
+    "extraFiles": [
       {
         "from": "./config.json",
-        "to": "../"
+        "to": "./config.json"
       }
     ],
     "nsis": {
@@ -56,7 +57,11 @@
       "artifactName": "${productName}-${version}.${ext}",
       "target": [
         "dmg"
-      ]
+      ],
+      "identity": null
+    },
+    "dmg": {
+      "sign": false
     },
     "win": {
       "icon": "./build/icons/256x256.png",
