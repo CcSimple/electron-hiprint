@@ -47,7 +47,7 @@ function initPrintEvent() {
   ipcMain.on("do", (event, data) => {
     var socket = null;
     if (data.clientType === "local") {
-      socket = SOCKET_SERVER.sockets.sockets[data.socketId];
+      socket = SOCKET_SERVER.sockets.sockets.get(data.socketId);
     } else {
       socket = SOCKET_CLIENT;
     }
@@ -121,7 +121,7 @@ function initPrintEvent() {
             .then(() => {
               socket &&
                 socket.emit("successs", {
-                  msg: "打印机成功",
+                  msg: "打印成功",
                   templateId: data.templateId,
                   replyId: data.replyId
                 });
@@ -154,7 +154,7 @@ function initPrintEvent() {
         .then(() => {
           socket &&
             socket.emit("successs", {
-              msg: "打印机成功",
+              msg: "打印成功",
               templateId: data.templateId,
               replyId: data.replyId
             });
@@ -206,7 +206,7 @@ function initPrintEvent() {
         if (socket) {
           success
             ? socket.emit("successs", {
-                msg: "打印机成功",
+                msg: "打印成功",
                 templateId: data.templateId,
                 replyId: data.replyId
               })
