@@ -120,7 +120,7 @@ function initPrintEvent() {
           printPdf(pdfPath, deviceName, data)
             .then(() => {
               socket &&
-                socket.emit("successs", {
+                socket.emit("success", {
                   msg: "打印成功",
                   templateId: data.templateId,
                   replyId: data.replyId
@@ -153,7 +153,7 @@ function initPrintEvent() {
       printPdf(data.pdf_path, deviceName, data)
         .then(() => {
           socket &&
-            socket.emit("successs", {
+            socket.emit("success", {
               msg: "打印成功",
               templateId: data.templateId,
               replyId: data.replyId
@@ -205,7 +205,7 @@ function initPrintEvent() {
       (success, failureReason) => {
         if (socket) {
           success
-            ? socket.emit("successs", {
+            ? socket.emit("success", {
                 msg: "打印成功",
                 templateId: data.templateId,
                 replyId: data.replyId
