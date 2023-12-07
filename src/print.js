@@ -119,12 +119,15 @@ function initPrintEvent() {
           fs.writeFileSync(pdfPath, pdfData);
           printPdf(pdfPath, deviceName, data)
             .then(() => {
-              socket &&
-                socket.emit("success", {
+              if (socket) {
+                const result = {
                   msg: "打印成功",
                   templateId: data.templateId,
                   replyId: data.replyId
-                });
+                };
+                socket.emit("successs", result); // 兼容 vue-plugin-hiprint 0.0.56 之前包
+                socket.emit("success", result);
+              }
             })
             .catch((err) => {
               socket &&
@@ -152,12 +155,15 @@ function initPrintEvent() {
     if (isUrlPdf) {
       printPdf(data.pdf_path, deviceName, data)
         .then(() => {
-          socket &&
-            socket.emit("success", {
+          if (socket) {
+            const result = {
               msg: "打印成功",
               templateId: data.templateId,
-              replyId: data.replyId
-            });
+              replyId: data.replyId,
+            };
+            socket.emit("successs", result); // 兼容 vue-plugin-hiprint 0.0.56 之前包
+            socket.emit("success", result);
+          }
         })
         .catch((err) => {
           socket &&
@@ -204,17 +210,21 @@ function initPrintEvent() {
       },
       (success, failureReason) => {
         if (socket) {
-          success
-            ? socket.emit("success", {
-                msg: "打印成功",
-                templateId: data.templateId,
-                replyId: data.replyId
-              })
-            : socket.emit("error", {
-                msg: failureReason,
-                templateId: data.templateId,
-                replyId: data.replyId
-              });
+          if (success) {
+            const result = {
+              msg: "打印成功",
+              templateId: data.templateId,
+              replyId: data.replyId,
+            };
+            socket.emit("successs", result); // 兼容 vue-plugin-hiprint 0.0.56 之前包
+            socket.emit("success", result);
+          } else {
+            socket.emit("error", {
+              msg: failureReason,
+              templateId: data.templateId,
+              replyId: data.replyId,
+            });
+          }
         }
         // 通过 taskMap 调用 task done 回调
         PRINT_RUNNER_DONE[data.taskId]();
