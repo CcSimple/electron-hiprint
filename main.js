@@ -13,7 +13,7 @@ const helper = require("./src/helper");
 const printSetup = require("./src/print");
 const setSetup = require("./src/set");
 const {
-  readConfig,
+  store,
   address,
   initServeEvent,
   initClientEvent,
@@ -104,7 +104,7 @@ async function initialize() {
     address.all().then((obj) => {
       event.sender.send("address", {
         ...obj,
-        port: global.PLUGIN_CONFIG?.port,
+        port: store.get("port"),
       });
     });
   });
@@ -129,6 +129,7 @@ async function createWindow() {
   const windowOptions = {
     width: 500, // 窗口宽度
     height: 300, // 窗口高度
+    title: store.get("mainTitle") || "Electron-hiprint",
     useContentSize: true, // 窗口大小不包含边框
     center: true, // 居中
     resizable: false, // 不可缩放
@@ -170,7 +171,7 @@ async function createWindow() {
 
   // 点击关闭，最小化到托盘
   MAIN_WINDOW.on("close", (event) => {
-    if (PLUGIN_CONFIG.closeType === "tray") {
+    if (store.get("closeType") === "tray") {
       // 最小化到托盘
       MAIN_WINDOW.hide();
 
@@ -189,22 +190,22 @@ async function createWindow() {
   MAIN_WINDOW.webContents.on("dom-ready", async () => {
     try {
       // 本地服务开启端口监听
-      server.listen(PLUGIN_CONFIG.port || 17521);
+      server.listen(store.get("port") || 17521);
       // 初始化本地 服务端事件
       initServeEvent(ioServer);
       // 有配置中转服务时连接中转服务
       if (
-        PLUGIN_CONFIG.connectTransit &&
-        PLUGIN_CONFIG.transitUrl &&
-        PLUGIN_CONFIG.transitToken
+        store.get("connectTransit") &&
+        store.get("transitUrl") &&
+        store.get("transitToken")
       ) {
-        global.SOCKET_CLIENT = ioClient(PLUGIN_CONFIG.transitUrl, {
+        global.SOCKET_CLIENT = ioClient(store.get("transitUrl"), {
           transports: ["websocket"],
           query: {
             client: "electron-hiprint",
           },
           auth: {
-            token: PLUGIN_CONFIG.transitToken,
+            token: store.get("transitToken"),
           },
         });
 
@@ -324,27 +325,13 @@ async function openSetWindow() {
   return SET_WINDOW;
 }
 
-/**
- * @description: 读取配置文件，设置 socket.io 鉴权
- */
-readConfig()
-  .then((PLUGIN_CONFIG) => {
-    global.PLUGIN_CONFIG = PLUGIN_CONFIG;
-    SOCKET_SERVER.use((socket, next) => {
-      if (
-        PLUGIN_CONFIG.token &&
-        socket.handshake.auth.token != PLUGIN_CONFIG.token
-      ) {
-        const err = new Error("Authentication error");
-        err.data = {
-          content: "Token 错误，请检查客户端与服务器 Token 是否一致",
-        };
-        next(err);
-      } else {
-        next();
-      }
-    });
-  })
-  .finally(() => {
-    initialize();
-  });
+// 初始化主窗口
+initialize();
+setTimeout(() => {
+  if (store.get("openAsHidden")) {
+    // 隐藏主窗口
+    MAIN_WINDOW.hide();
+    // 隐藏任务栏
+    MAIN_WINDOW.setSkipTaskbar(true);
+  }
+}, 1000);

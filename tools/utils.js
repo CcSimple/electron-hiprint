@@ -1,114 +1,54 @@
-const path = require("path");
-const fs = require("fs");
 const address = require("address");
 const ipp = require("ipp");
 const { machineIdSync } = require("node-machine-id");
+const Store = require('electron-store');
+
+Store.initRenderer();
+
+const schema = {
+  mainTitle: {
+    type: "string",
+    default: "Electron-hiprint"
+  },
+  openAtLogin: {
+    type: "boolean",
+    default: true
+  },
+  openAsHidden: {
+    type: "boolean",
+    default: true
+  },
+  connectTransit: {
+    type: "boolean",
+    default: false
+  },
+  transitUrl: {
+    type: "string",
+    default: ""
+  },
+  transitToken: {
+    type: "string",
+    default: ""
+  },
+  closeType: {
+    type: "string",
+    enum: ["tray", "quit"],
+    default: "tray"
+  },
+  port: {
+    type: "number",
+    minimum: 10000,
+    default: 17521
+  },
+  token: {
+    type: "string",
+    default: ""
+  }
+}
+
+const store = new Store({ schema });
 
 const { app, Notification } = require("electron");
-
-/**
- * @description: 获取系统类型
- * @return {Number} 1: macos, 2: windows, 3: linux
- */
-function getSystem() {
-  if (process.platform == "darwin") {
-    return 1;
-  }
-  if (process.platform == "win32") {
-    return 2;
-  }
-  if (process.platform == "linux") {
-    return 3;
-  }
-}
-
-/**
- * @description: 获取exe路径
- * @return {String} win 为 exe路径，macos 为 hiprint.app/Contents/MacOS
- */
-function getExePath() {
-  if (app.isPackaged) {
-    if (getSystem() === 1) {
-      return path.resolve(app.getAppPath(), "../../");
-    }
-    return path.dirname(app.getPath("exe"));
-  } else {
-    return path.resolve(__dirname, "../");
-  }
-}
-
-/**
- * @description: 获取配置文件路径
- * @return {String} 根据系统不同，返回不同的路径
- */
-function getConfigPath() {
-  if (getSystem() === 1) {
-    return getExePath() + "/config.json";
-  } else {
-    return getExePath() + "\\config.json";
-  }
-}
-
-/**
- * @description: 读取配置文件
- * @return {Promise<Object>} 配置
- */
-function readConfig() {
-  return new Promise((resolve, reject) => {
-    fs.readFile(getConfigPath(), "utf-8", (err, data) => {
-      const PLUGIN_CONFIG = { port: 17521, token: null };
-      if (data) {
-        var {
-          port,
-          token,
-          openAtLogin,
-          openAsHidden,
-          closeType,
-          connectTransit,
-          transitUrl,
-          transitToken,
-        } = JSON.parse(data);
-        // 端口号限制为 10000 - 65535 防止常用端口冲突
-        if (port && port >= 10000 && port <= 65535) {
-          PLUGIN_CONFIG.port = port;
-        }
-        PLUGIN_CONFIG.token = token;
-        PLUGIN_CONFIG.openAtLogin = Boolean(openAtLogin);
-        PLUGIN_CONFIG.openAsHidden = Boolean(openAsHidden);
-        PLUGIN_CONFIG.connectTransit = Boolean(connectTransit);
-        PLUGIN_CONFIG.transitUrl = transitUrl;
-        PLUGIN_CONFIG.transitToken = transitToken;
-        PLUGIN_CONFIG.closeType = ["tray", "quit"].includes(closeType)
-          ? closeType
-          : "tray";
-      }
-      if (app.isPackaged) {
-        app.setLoginItemSettings({
-          openAtLogin: Boolean(PLUGIN_CONFIG.openAtLogin),
-          openAsHidden: Boolean(PLUGIN_CONFIG.openAsHidden),
-        });
-      }
-      resolve(PLUGIN_CONFIG);
-    });
-  });
-}
-
-/**
- * @description: 写入配置文件
- * @param {Object} data 配置
- * @return {*}
- */
-function writeConfig(data) {
-  return new Promise((resolve, reject) => {
-    fs.writeFile(getConfigPath(), JSON.stringify(data, null, 2), (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
-}
 
 /**
  * @description: 获取当前系统 IP 地址
@@ -183,7 +123,7 @@ function emitClientInfo(socket) {
       mac: mac, // mac 地址
       ip: _address.ip(), // ip 地址
       ipv6: _address.ipv6(), // ipv6 地址
-      clientUrl: `http://${_address.ip()}:${PLUGIN_CONFIG.port || 17521}`, // 客户端地址
+      clientUrl: `http://${_address.ip()}:${store.get("port") || 17521}`, // 客户端地址
       machineId: machineIdSync({ original: true }), // 客户端唯一id
     });
   });
@@ -375,7 +315,7 @@ function initClientEvent() {
     // 弹出连接成功通知
     const notification = new Notification({
       title: "已连接中转服务器",
-      body: `已连接至中转服务器【${PLUGIN_CONFIG.transitUrl}】，即刻开印！`,
+      body: `已连接至中转服务器【${store.get("transitUrl")}】，即刻开印！`,
     });
     // 显示通知
     notification.show();
@@ -494,8 +434,7 @@ function initClientEvent() {
 }
 
 module.exports = {
-  readConfig,
-  writeConfig,
+  store,
   address: _address,
   initServeEvent,
   initClientEvent,

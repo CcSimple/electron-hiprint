@@ -91,6 +91,7 @@
   "dependencies": {
     "address": "^1.2.0",
     "concurrent-tasks": "^1.0.7",
+    "electron-store": "^8.1.0",
     "ipp": "^2.0.1",
     "jquery": "^3.6.0",
     "node-machine-id": "^1.1.12",
