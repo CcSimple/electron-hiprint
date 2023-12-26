@@ -1,14 +1,14 @@
 /*
  * @Date: 2023-09-05 17:34:28
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2023-10-30 14:07:22
+ * @LastEditTime: 2023-12-19 15:55:25
  * @FilePath: \electron-hiprint\src\set.js
  */
 "use strict";
 
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
-const { writeConfig } = require("../tools/utils");
+const { store } = require("../tools/utils");
 
 /**
  * @description: 创建设置窗口
@@ -55,7 +55,7 @@ async function createSetWindow() {
  * @return {Void}
  */
 function getConfig(event) {
-  event.sender.send("onConfig", PLUGIN_CONFIG);
+  event.sender.send("onConfig", store.store);
 }
 
 /**
@@ -75,14 +75,11 @@ function setConfig(event, data) {
     })
     .then((res) => {
       if (res.response === 0) {
-        writeConfig(data)
-          .then(() => {
-            app.relaunch();
-            app.exit();
-          })
-          .catch(() => {
-            dialog.showErrorBox("提示", "保存失败！");
-          });
+        store.set(data)
+        setTimeout(() => {
+          app.relaunch();
+          app.exit();
+        }, 500);
       }
     });
 }

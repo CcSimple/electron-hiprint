@@ -1,14 +1,14 @@
 <!--
  * @Date: 2022-09-13 11:11:52
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2023-10-09 16:33:55
+ * @LastEditTime: 2023-12-19 16:28:47
  * @FilePath: \electron-hiprint\assets\index.html
 -->
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>hiprint</title>
+    <title>Electron-hiprint</title>
     <link rel="stylesheet" href="./style.css" />
     <link
       rel="stylesheet"
@@ -48,6 +48,13 @@
     <script type="text/javascript">
       window.$ = window.jQuery = require("jquery");
       const { ipcRenderer, clipboard } = require("electron");
+
+      const Store = require('electron-store');
+
+      const store = new Store();
+
+      document.title = store.get("mainTitle") || "Electron-hiprint";
+
       let ipc = ipcRenderer;
       $(document).ready(() => {
         $("#seticon").click(() => {

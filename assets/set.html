@@ -1,7 +1,7 @@
 <!--
  * @Date: 2023-09-05 13:56:58
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2023-10-13 17:48:21
+ * @LastEditTime: 2023-12-19 16:22:59
  * @FilePath: \electron-hiprint\assets\set.html
 -->
 <!DOCTYPE html>
@@ -337,7 +337,6 @@
                 break;
               case "port": // 端口号
                 if (!item.value) {
-                  console.log(item.name, item.value, !item.value);
                   ipc.send("showMessageBox", {
                     type: "error",
                     title: "错误",
@@ -346,13 +345,13 @@
                   });
                   return false;
                 }
-                formData[item.name] = item.value;
+                formData[item.name] = item.value * 1;
                 break;
               case "closeType": // 关闭窗口设置
                 formData[item.name] = item.value;
                 break;
               case "token": // TOKEN
-                formData[item.name] = item.value || null;
+                formData[item.name] = item.value || "";
                 break;
               case "openAtLogin": // 开机启动
               case "openAsHidden": // 自启后最小化
@@ -397,6 +396,7 @@
                   });
                   $("#transit").show(250);
                 } else {
+                  $(`#${key}`).prop("checked", false);
                   $("#transit").hide();
                 }
                 break;
