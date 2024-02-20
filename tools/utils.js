@@ -8,43 +8,47 @@ Store.initRenderer();
 const schema = {
   mainTitle: {
     type: "string",
-    default: "Electron-hiprint"
+    default: "Electron-hiprint",
   },
   openAtLogin: {
     type: "boolean",
-    default: true
+    default: true,
   },
   openAsHidden: {
     type: "boolean",
-    default: true
+    default: true,
   },
   connectTransit: {
     type: "boolean",
-    default: false
+    default: false,
   },
   transitUrl: {
     type: "string",
-    default: ""
+    default: "",
   },
   transitToken: {
     type: "string",
-    default: ""
+    default: "",
+  },
+  allowNotify: {
+    type: "boolean",
+    default: true,
   },
   closeType: {
     type: "string",
     enum: ["tray", "quit"],
-    default: "tray"
+    default: "tray",
   },
   port: {
     type: "number",
     minimum: 10000,
-    default: 17521
+    default: 17521,
   },
   token: {
     type: "string",
-    default: ""
-  }
-}
+    default: "",
+  },
+};
 
 const store = new Store({ schema });
 
@@ -148,13 +152,16 @@ function initServeEvent(server) {
       server.engine.clientsCount
     );
 
-    // 弹出连接成功通知
-    const notification = new Notification({
-      title: "新的连接",
-      body: `已建立新的连接，当前连接数：${server.engine.clientsCount}`,
-    });
-    // 显示通知
-    notification.show();
+    // 判断是否允许通知
+    if (store.get("allowNotify")) {
+      // 弹出连接成功通知
+      const notification = new Notification({
+        title: "新的连接",
+        body: `已建立新的连接，当前连接数：${server.engine.clientsCount}`,
+      });
+      // 显示通知
+      notification.show();
+    }
 
     // 向 client 发送打印机列表
     socket.emit("printerList", MAIN_WINDOW.webContents.getPrinters());
@@ -312,13 +319,16 @@ function initClientEvent() {
     // 通知渲染进程已连接
     MAIN_WINDOW.webContents.send("clientConnection", true);
 
-    // 弹出连接成功通知
-    const notification = new Notification({
-      title: "已连接中转服务器",
-      body: `已连接至中转服务器【${store.get("transitUrl")}】，即刻开印！`,
-    });
-    // 显示通知
-    notification.show();
+    // 判断是否允许通知
+    if (store.get("allowNotify")) {
+      // 弹出连接成功通知
+      const notification = new Notification({
+        title: "已连接中转服务器",
+        body: `已连接至中转服务器【${store.get("transitUrl")}】，即刻开印！`,
+      });
+      // 显示通知
+      notification.show();
+    }
 
     // 向 中转服务 发送打印机列表
     client.emit("printerList", MAIN_WINDOW.webContents.getPrinters());

@@ -1,7 +1,7 @@
 <!--
  * @Date: 2023-09-05 13:56:58
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2023-12-19 16:22:59
+ * @LastEditTime: 2024-02-20 13:12:03
  * @FilePath: \electron-hiprint\assets\set.html
 -->
 <!DOCTYPE html>
@@ -190,6 +190,22 @@
             </div>
           </div>
         </div>
+        <div class="el-form-item">
+          <div class="el-form-item__label">允许通知</div>
+          <div class="el-form-item__content">
+            <div class="el-switch" data-prop="allowNotify">
+              <input
+                id="allowNotify"
+                name="allowNotify"
+                type="checkbox"
+                class="el-switch__input"
+                checked="false"
+                value="true"
+              />
+              <span class="el-switch__core"></span>
+            </div>
+          </div>
+        </div>
         <!-- 关闭窗口设置 -->
         <div class="el-form-item">
           <div class="el-form-item__label">关闭主窗口</div>
@@ -284,7 +300,7 @@
             if (!val) {
               ipc.send("setContentSize", {
                 width: 400,
-                height: 688,
+                height: 776,
               });
               $("#transit").show(250);
             }
@@ -294,7 +310,7 @@
               setTimeout(() => {
                 ipc.send("setContentSize", {
                   width: 400,
-                  height: 512,
+                  height: 600,
                 });
               }, 250);
             }
@@ -310,7 +326,9 @@
           const formData = {
             openAtLogin: false, // 开机启动
             openAsHidden: false, // 自启后最小化
+            allowNotify: false, // 允许通知
           };
+          // 连接中转服务开关
           formData.connectTransit =
             formDataArr.find(({ name }) => name === "connectTransit")?.value ||
             false;
@@ -356,6 +374,7 @@
               case "openAtLogin": // 开机启动
               case "openAsHidden": // 自启后最小化
               case "connectTransit": // 连接中转服务
+              case "allowNotify": // 允许通知
                 formData[item.name] = item.value === "true";
                 break;
             }
@@ -392,7 +411,7 @@
                   $(`#${key}`).prop("checked", true);
                   ipc.send("setContentSize", {
                     width: 400,
-                    height: 688,
+                    height: 776,
                   });
                   $("#transit").show(250);
                 } else {
@@ -402,6 +421,7 @@
                 break;
               case "openAtLogin":
               case "openAsHidden":
+              case "allowNotify":
                 if (data[key]) {
                   $(`.el-switch[data-prop=${key}]`).addClass("is-checked");
                   $(`#${key}`).prop("checked", true);
