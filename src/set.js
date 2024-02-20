@@ -1,7 +1,7 @@
 /*
  * @Date: 2023-09-05 17:34:28
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2023-12-19 15:55:25
+ * @LastEditTime: 2024-02-20 13:09:38
  * @FilePath: \electron-hiprint\src\set.js
  */
 "use strict";
@@ -17,7 +17,7 @@ const { store } = require("../tools/utils");
 async function createSetWindow() {
   const windowOptions = {
     width: 400, // 窗口宽度
-    height: 512, // 窗口高度
+    height: 600, // 窗口高度
     useContentSize: true, // 窗口大小不包含边框
     center: true, // 居中
     alwaysOnTop: true, // 永远置顶
