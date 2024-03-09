@@ -2,6 +2,7 @@ const address = require("address");
 const ipp = require("ipp");
 const { machineIdSync } = require("node-machine-id");
 const Store = require("electron-store");
+const { getPaperSizeInfo, getPaperSizeInfoAll } = require("win32-pdf-printer");
 const log = require("./log");
 
 Store.initRenderer();
@@ -176,7 +177,7 @@ function initServeEvent(server) {
      * @description: client 请求客户端信息
      */
     socket.on("getClientInfo", () => {
-      log(`插件端 ${socket.id} getClientInfo`);
+      log(`插件端 ${socket.id}: getClientInfo`);
       emitClientInfo(socket);
     });
 
@@ -214,6 +215,18 @@ function initServeEvent(server) {
     socket.on("refreshPrinterList", () => {
       log(`插件端 ${socket.id}: refreshPrinterList`);
       socket.emit("printerList", MAIN_WINDOW.webContents.getPrinters());
+    });
+
+    /**
+     * @description: client 获取打印机纸张信息
+     */
+    socket.on("getPaperSizeInfo", (printer) => {
+      log(`插件端 ${socket.id}: getPaperSizeInfo`);
+      if (process.platform === "win32") {
+        let fun = printer ? getPaperSizeInfo : getPaperSizeInfoAll;
+        let paper = fun();
+        paper && socket.emit("paperSizeInfo", paper);
+      }
     });
 
     /**

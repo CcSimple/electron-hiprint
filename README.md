@@ -242,6 +242,44 @@ socket.emit("refreshPrinterList");
 // https://github.com/Xavier9896/node-hiprint-transit/blob/main/index.js#L139
 ```
 
+## 获取打印机纸张信息
+
+### 连接为 `electron-hiprint`
+
+依赖 [win32-pdf-printer](https://www.npmjs.com/package/win32-pdf-printer) 包实现，暂时只支持 window 环境中使用！
+
+> ❗️ node-hiprint-transit 中转暂未添加支持
+
+```js
+// printerName: 打印机名称 可选值，缺省时返回所有打印机的纸张信息
+if (globalThis.connect) {
+  socket.emit("getPaperSizeInfo", printerName);
+} else {
+  alert("未连接客户端！")
+  window.open("hiprint://")
+}
+```
+
+```js
+[
+    {
+        "PrinterName": "Microsoft Print to PDF",
+        "TaskNumber": 0, // 打印队列任务数
+        "Status": 0, // 打印机状态码
+        "StatusMsg": "准备就绪（Ready）", // 打印机状态信息
+        "PaperSizes": [
+            {
+                "Height": 1100,
+                "Kind": 1,
+                "PaperName": "信纸",
+                "RawKind": 1,
+                "Width": 850
+            },
+            {...}, {...}, {...}
+        ]
+    }
+]
+```
 ## 打印 HTML
 
 ### 连接为 `electron-hiprint`

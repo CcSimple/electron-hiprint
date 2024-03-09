@@ -99,7 +99,8 @@
     "pdf-to-printer": "^5.6.0",
     "socket.io": "^3.1.0",
     "socket.io-client": "^3.1.0",
-    "unix-print": "^1.2.0"
+    "unix-print": "^1.2.0",
+    "win32-pdf-printer": "^4.0.1"
   },
   "devDependencies": {
     "electron": "^15.0.0",
