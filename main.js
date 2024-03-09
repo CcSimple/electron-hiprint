@@ -1,3 +1,9 @@
+/*
+ * @Date: 2024-01-25 15:52:14
+ * @LastEditors: admin@54xavier.cn
+ * @LastEditTime: 2024-03-09 12:51:06
+ * @FilePath: \electron-hiprint\main.js
+ */
 const {
   app,
   BrowserWindow,
@@ -6,12 +12,14 @@ const {
   Notification,
   Tray,
   Menu,
+  shell
 } = require("electron");
 const path = require("path");
 const server = require("http").createServer();
 const helper = require("./src/helper");
 const printSetup = require("./src/print");
 const setSetup = require("./src/set");
+const log = require("./tools/log");
 const {
   store,
   address,
@@ -118,6 +126,7 @@ async function initialize() {
         createWindow();
       }
     });
+    log("==> Electron-hiprint 启动 <==")
   });
 }
 
@@ -281,6 +290,12 @@ function initTray() {
           SET_WINDOW.show();
         }
       },
+    },
+    {
+      label: "查看日志",
+      click: () => {
+        shell.openPath(app.getPath("logs"));
+      }
     },
     {
       label: "退出",

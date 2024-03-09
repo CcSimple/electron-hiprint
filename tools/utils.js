@@ -1,7 +1,8 @@
 const address = require("address");
 const ipp = require("ipp");
 const { machineIdSync } = require("node-machine-id");
-const Store = require('electron-store');
+const Store = require("electron-store");
+const log = require("./log");
 
 Store.initRenderer();
 
@@ -146,6 +147,8 @@ function initServeEvent(server) {
    * @description: 新的 web client 连入，绑定 socket 事件
    */
   server.on("connect", (socket) => {
+    log(`==> 插件端 New Connected: ${socket.id}`);
+
     // 通知渲染进程已连接
     MAIN_WINDOW.webContents.send(
       "serverConnection",
@@ -173,6 +176,7 @@ function initServeEvent(server) {
      * @description: client 请求客户端信息
      */
     socket.on("getClientInfo", () => {
+      log(`插件端 ${socket.id} getClientInfo`);
       emitClientInfo(socket);
     });
 
@@ -183,6 +187,7 @@ function initServeEvent(server) {
      * @param {String} addressType ip、ipv6、mac、all === null
      */
     socket.on("address", (addressType) => {
+      log(`插件端 ${socket.id}: get address(${addressType || "未指定类型"})`);
       switch (addressType) {
         case "ip":
         case "ipv6":
@@ -207,6 +212,7 @@ function initServeEvent(server) {
      * @description: client 请求刷新打印机列表
      */
     socket.on("refreshPrinterList", () => {
+      log(`插件端 ${socket.id}: refreshPrinterList`);
       socket.emit("printerList", MAIN_WINDOW.webContents.getPrinters());
     });
 
@@ -214,6 +220,7 @@ function initServeEvent(server) {
      * @description: client 调用 ipp 打印 详见：https://www.npmjs.com/package/ipp
      */
     socket.on("ippPrint", (options) => {
+      log(`插件端 ${socket.id}: ippPrint`);
       try {
         const { url, opt, action, message } = options;
         let printer = ipp.Printer(url, opt);
@@ -247,6 +254,7 @@ function initServeEvent(server) {
           );
         });
       } catch (error) {
+        log(`插件端 ${socket.id}: ippPrint error: ${error.message}`);
         socket.emit("ippPrinterCallback", {
           type: error.name,
           msg: error.message,
@@ -258,6 +266,7 @@ function initServeEvent(server) {
      * @description: client ipp request 详见：https://www.npmjs.com/package/ipp
      */
     socket.on("ippRequest", (options) => {
+      log(`插件端 ${socket.id}: ippRequest`);
       try {
         const { url, data } = options;
         let _data = ipp.serialize(data);
@@ -269,6 +278,7 @@ function initServeEvent(server) {
           );
         });
       } catch (error) {
+        log(`插件端 ${socket.id}: ippRequest error: ${error.message}`);
         socket.emit("ippRequestCallback", {
           type: error.name,
           msg: error.message,
@@ -296,6 +306,7 @@ function initServeEvent(server) {
      * @description: client 断开连接
      */
     socket.on("disconnect", () => {
+      log(`==> 插件端 Disconnect: ${socket.id}`);
       MAIN_WINDOW.webContents.send(
         "serverConnection",
         server.engine.clientsCount
@@ -316,6 +327,7 @@ function initClientEvent() {
    * @description: 连接中转服务成功，绑定 socket 事件
    */
   client.on("connect", () => {
+    log(`==> 中转服务 Connected Transit Server: ${client.id}`);
     // 通知渲染进程已连接
     MAIN_WINDOW.webContents.send("clientConnection", true);
 
@@ -341,6 +353,7 @@ function initClientEvent() {
    * @description: 中转服务 请求客户端信息
    */
   client.on("getClientInfo", () => {
+    log(`中转服务 ${client.id}: getClientInfo`);
     emitClientInfo(client);
   });
 
@@ -348,6 +361,7 @@ function initClientEvent() {
    * @description: 中转服务 请求刷新打印机列表
    */
   client.on("refreshPrinterList", () => {
+    log(`中转服务 ${client.id}: refreshPrinterList`);
     client.emit("printerList", MAIN_WINDOW.webContents.getPrinters());
   });
 
@@ -355,6 +369,7 @@ function initClientEvent() {
    * @description: 中转服务 调用 ipp 打印 详见：https://www.npmjs.com/package/ipp
    */
   client.on("ippPrint", (options) => {
+    log(`中转服务 ${client.id}: ippPrint`);
     try {
       const { url, opt, action, message, replyId } = options;
       let printer = ipp.Printer(url, opt);
@@ -388,6 +403,7 @@ function initClientEvent() {
         );
       });
     } catch (error) {
+      log(`中转服务 ${client.id}: ippPrint error: ${error.message}`);
       client.emit("ippPrinterCallback", {
         type: error.name,
         msg: error.message,
@@ -400,6 +416,7 @@ function initClientEvent() {
    * @description: 中转服务 ipp request 详见：https://www.npmjs.com/package/ipp
    */
   client.on("ippRequest", (options) => {
+    log(`中转服务 ${client.id}: ippRequest`);
     try {
       const { url, data, replyId } = options;
       let _data = ipp.serialize(data);
@@ -411,6 +428,7 @@ function initClientEvent() {
         );
       });
     } catch (error) {
+      log(`中转服务 ${client.id}: ippRequest error: ${error.message}`);
       client.emit("ippRequestCallback", {
         type: error.name,
         msg: error.message,
@@ -439,6 +457,7 @@ function initClientEvent() {
    * @description: 中转服务 断开连接
    */
   client.on("disconnect", () => {
+    log(`==> 中转服务 Disconnect: ${client.id}`);
     MAIN_WINDOW.webContents.send("clientConnection", false);
   });
 }
