@@ -7,7 +7,7 @@
   "license": "MIT",
   "homepage": "https://gitee.com/CcSimple",
   "scripts": {
-    "start": "electron .",
+    "start": "chcp 65001 && electron .",
     "build-w": "electron-builder -w nsis:ia32 && node ./tools/rename --tag win_x32",
     "build-w-64": "electron-builder -w nsis:x64 && node ./tools/rename --tag win_x64",
     "build-m": "electron-builder -m --x64 && node ./tools/rename --tag mac_x64",
@@ -91,6 +91,7 @@
   "dependencies": {
     "address": "^1.2.0",
     "concurrent-tasks": "^1.0.7",
+    "dayjs": "^1.11.10",
     "electron-store": "^8.1.0",
     "ipp": "^2.0.1",
     "jquery": "^3.6.0",
@@ -101,7 +102,7 @@
     "unix-print": "^1.2.0"
   },
   "devDependencies": {
-    "electron": "^13.6.9",
+    "electron": "^15.0.0",
     "electron-builder": "23.0.6",
     "fs-extra": "^9.1.0",
     "prettier": "^1.16.4",

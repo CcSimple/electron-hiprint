@@ -1,7 +1,7 @@
 /*
  * @Date: 2023-09-05 17:34:28
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-02-20 13:09:38
+ * @LastEditTime: 2024-03-09 12:00:46
  * @FilePath: \electron-hiprint\src\set.js
  */
 "use strict";
@@ -9,6 +9,7 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const { store } = require("../tools/utils");
+const log = require("../tools/log");
 
 /**
  * @description: 创建设置窗口
@@ -65,6 +66,7 @@ function getConfig(event) {
  * @return {Void}
  */
 function setConfig(event, data) {
+  log("==> 设置窗口：保存配置 <==")
   // 保存配置前，弹出 dialog 确认
   dialog
     .showMessageBox(SET_WINDOW, {
