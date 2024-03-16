@@ -164,7 +164,7 @@ async function createWindow() {
   systemSetup();
 
   // 加载主页面
-  const indexHtml = path.join("file://", __dirname, "/assets/index.html");
+  const indexHtml = path.join("file://", app.getAppPath(), "assets/index.html");
   MAIN_WINDOW.webContents.loadURL(indexHtml);
 
   // 未打包时打开开发者工具
@@ -249,7 +249,7 @@ function loadingView(windowOptions) {
     height: windowOptions.height,
   });
 
-  const loadingHtml = path.join("file://", __dirname, "/assets/loading.html");
+  const loadingHtml = path.join("file://", app.getAppPath(), "assets/loading.html");
   loadingBrowserView.webContents.loadURL(loadingHtml);
 
   // 主窗口 dom 加载完毕，移除 loadingBrowserView
@@ -272,7 +272,7 @@ function systemSetup() {
  * @return {Tray} APP_TRAY 托盘实例
  */
 function initTray() {
-  let trayPath = path.join(app.getAppPath(), "/assets/icons/tray.png");
+  let trayPath = path.join(app.getAppPath(), "assets/icons/tray.png");
 
   APP_TRAY = new Tray(trayPath);
 
