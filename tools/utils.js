@@ -50,6 +50,10 @@ const schema = {
     type: "string",
     default: "",
   },
+  pluginVersion: {
+    type: "string",
+    default: "",
+  }
 };
 
 const store = new Store({ schema });

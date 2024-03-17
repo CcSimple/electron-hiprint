@@ -1,7 +1,7 @@
 <!--
  * @Date: 2022-09-13 11:11:52
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-03-16 19:51:35
+ * @LastEditTime: 2024-03-16 22:12:20
  * @FilePath: \electron-hiprint\assets\index.html
 -->
 <!DOCTYPE html>
@@ -54,6 +54,12 @@
             打印状态：<span>{{ printing ? "文档打印中" : "空闲" }}</span>
           </div>
           <div class="message row">设备编号：<span @click="handleCopy">{{ deviceId }}</span></div>
+          <div class="message">
+            插件版本：{{ pluginVersion }}
+          </div>
+          <div class="message">
+            客户端版本：{{ process.env.npm_package_version }}
+          </div>
         </div>
       </div>
     </div>
@@ -75,6 +81,8 @@
             transitActiveFlag: false,
             socketActiveNum: 0,
             printing: false,
+            version: "1.0.10",
+            pluginVersion: store.get("pluginVersion") || "未指定",
           };
         },
         created() {
