@@ -1,8 +1,8 @@
 <!--
  * @Date: 2023-09-05 13:56:58
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-03-16 22:20:51
- * @FilePath: \electron-hiprint\assets\set.html
+ * @LastEditTime: 2024-04-02 15:27:51
+ * @FilePath: /electron-hiprint/assets/set.html
 -->
 <!DOCTYPE html>
 <html>
@@ -10,14 +10,11 @@
     <meta charset="UTF-8" />
     <title>设置</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="https://registry.npmmirror.com/element-ui/2.15.14/files/lib/theme-chalk/index.css"
-    />
-    <script src="https://registry.npmmirror.com/vue/2.7.16/files/dist/vue.min.js"></script>
-    <script src="https://registry.npmmirror.com/element-ui/2.15.14/files/lib/index.js"></script>
-    <script src="https://registry.npmmirror.com/dayjs/1.11.10/files/dayjs.min.js"></script>
-    <script src="https://registry.npmmirror.com/lodash/4.17.21/files/lodash.min.js"></script>
+    <link rel="stylesheet" href="./element-ui/index.css" />
+    <script src="./js/vue.min.js"></script>
+    <script src="./element-ui/index.js"></script>
+    <script src="./js/dayjs.min.js"></script>
+    <script src="./js/lodash.min.js"></script>
     <style>
       html,
       body {
@@ -78,7 +75,12 @@
         </el-form-item>
         <!-- 插件版本 设置 -->
         <el-form-item label="插件版本设置" prop="pluginVersion">
-          <el-select v-model="formData.pluginVersion" filterable size="small">
+          <el-select
+            v-model="formData.pluginVersion"
+            filterable
+            size="small"
+            @change="onChange({prop: pluginVersion, value: $event})"
+          >
             <template v-for="option in versions">
               <el-option
                 :key="option.version"
@@ -114,7 +116,7 @@
         >
           <el-switch
             v-model="formData.connectTransit"
-            @change="onChange"
+            @change="onChange({prop: 'connectTransit', value: $event})"
           ></el-switch>
         </el-form-item>
         <template v-if="formData.connectTransit">
@@ -183,6 +185,7 @@
         el: "#app",
         data: () => {
           return {
+            // 设置值
             formData: {
               port: 17521,
               token: "",
@@ -195,7 +198,45 @@
               allowNotify: false,
               closeType: "tray",
             },
-            versions: [],
+            // 预制的版本，解决部分内网无法获取新版本的问题
+            versions: [
+              {
+                version: "0.0.56",
+                time: 1700405025750,
+                updateTime: "2023/11/19 22:43:45",
+              },
+              {
+                version: "0.0.54-fix",
+                time: 1688956459696,
+                updateTime: "2023/07/10 10:34:19",
+              },
+              {
+                version: "0.0.54",
+                time: 1688525681271,
+                updateTime: "2023/07/05 10:54:41",
+              },
+              {
+                version: "0.0.52",
+                time: 1683539873782,
+                updateTime: "2023/05/08 17:57:53",
+              },
+              {
+                version: "0.0.50",
+                time: 1680228434697,
+                updateTime: "2023/03/31 10:07:14",
+              },
+              {
+                version: "0.0.48",
+                time: 1678354234564,
+                updateTime: "2023/03/09 17:30:34",
+              },
+              {
+                version: "0.0.46",
+                time: 1677118403361,
+                updateTime: "2023/02/23 10:13:23",
+              },
+            ],
+            // 校验规则
             rules: {
               port: [
                 {
@@ -241,40 +282,76 @@
           };
         },
         created() {
+          // 获取配置
           ipc.send("getConfig");
           ipc.on("onConfig", this.onConfig);
           this.getVersions();
         },
         methods: {
-          onChange(val) {
-            if (val) {
-              ipc.send("setContentSize", {
-                width: 400,
-                height: 862,
-              });
-            } else {
-              ipc.send("setContentSize", {
-                width: 400,
-                height: 686,
-              });
+          /**
+           * @description: 表单 change 事件
+           * @param {String} prop change 字段名
+           * @param {Any} value change 值
+           * @return {Void}
+           */
+
+          onChange({ prop, value }) {
+            switch (prop) {
+              case "connectTransit":
+                ipc.send("setContentSize", {
+                  width: 400,
+                  height: value ? 862 : 688,
+                });
+                break;
+              case "pluginVersion":
+                // TODO: 下载插件对应 js、css 文件到本地
+                break;
             }
           },
+          /**
+           * @description: 测试连接
+           * @return {Void}
+           */
+
           handleTest() {
             ipc.send("testTransit", {
               url: this.formData.transitUrl,
               token: this.formData.transitToken,
             });
           },
+          /**
+           * @description: 提交设置
+           * @return {Void}
+           */
+
           submit() {
             ipc.send("setConfig", this.formData);
           },
+          /**
+           * @description: 关闭窗口
+           * @return {Void}
+           */
           close() {
             ipc.send("closeSetWindow");
           },
+          /**
+           * @description: 获取配置
+           * @param {IpcRendererEvent} event 事件
+           * @param {Any} data 数据
+           * @return {Void}
+           */
+
           onConfig(event, data) {
             this.formData = data;
-            this.onChange(data.connectTransit);
+            this.onChange({
+              prop: "connectTransit",
+              value: data.connectTransit,
+            });
           },
+          /**
+           * @description: 获取在线版本信息
+           * @return {Void}
+           */
           getVersions() {
             const xhr = new XMLHttpRequest();
             // cnpm 源
@@ -290,7 +367,7 @@
                     version,
                     time: dayjs(this.npmInfo.time[version]).valueOf(),
                     updateTime: dayjs(this.npmInfo.time[version]).format(
-                      "YYYY-MM-DD HH:mm:ss"
+                      "YYYY/MM/DD HH:mm:ss"
                     ),
                   })),
                   "time",
