@@ -1,6 +1,6 @@
 # electron-hiprint
 
-这个项目是为 [vue-plugin-hiprint](https://github.com/CcSimple/vue-plugin-hiprint) 配套开发的不弹框静默打印方案，不过我们发现部分使用此项目的开发者有自己的设计器或渲染方案，也可能仅仅是需要将一段 HTML、一个 PDF 静默打印出来。如果你也是这样的需求，那么这个项目将能解决你的问题。
+这个项目是为 [vue-plugin-hiprint](https://github.com/CcSimple/vue-plugin-hiprint) 配套开发的不弹框静默打印方案，我们发现部分使用此项目的开发者有自己的设计器或渲染方案，也可能仅仅是需要将一段 HTML、一个 PDF 静默打印出来。如果你也是这样的需求，那么这个项目将能解决你的问题。
 
 ## 预览 <a href="https://ccsimple.gitee.io/vue-plugin-hiprint/">vue-plugin-hiprint</a> 打印设计 demo
 
@@ -12,17 +12,19 @@
 
 ## 调试/打包
 
-```console
+```shell
 git clone https://github.com/CcSimple/electron-hiprint.git
-// or
+# or
 git clone https://gitee.com/CcSimple/electron-hiprint.git
-// init
+
+# init
 cd electron-hiprint
-npm i
-// 调试预览
+npm install
+
+# 调试预览
 npm run start
-// 打包 win x64
-// 详情见package.json
+
+# 打包 win x64，其余平台版本详情见 package.json
 npm run build-w-64
 ```
 
@@ -32,21 +34,21 @@ npm run build-w-64
 
 ## 打印原理说明
 
-1. 连接客户端开启的 socket.io 服务 (默认端口 17521)
+1. WEB 连接客户端开启的 socket.io 服务 (默认端口 17521)
 
    - socket.io-client^4.x 连接 ("http://localhost:17521")
 
 2. 通过 socket.io-client^4.x 服务发送打印数据 (news)
 
    - socket.emit("news", { html, templateId, printer, pageSize });
-   - 主要参数 html: 即 html 字符串，templateId: 用于回调 successs/error 时的标识
+   - 主要参数 html: 即 html 字符串，templateId: 用于回调 successs / error 时的标识
    - printer: 打印机名称，pageSize: 打印纸张大小 (其他参数,见下面的示例)
 
 ## 打印端设置
 
-### v1.0.7 之后版本添加的设置功能
+### v1.0.7 后续版本添加的设置功能
 
-可在安装路径中修改 `config.json` 文件以修改设置，亦或者修改项目文件中默认值后重新打包自行发行自己的版本及设置。
+可安装后于安装目录找到 config.json 修改配置，亦或者修改项目文件中默认值后重新打包发行自己的版本及设置。
 
 也可以右键托盘，选择 `设置` 后在 `设置` 窗口中进行设置。
 
