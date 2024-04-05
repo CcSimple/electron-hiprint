@@ -1,12 +1,18 @@
 /*
  * @Date: 2023-09-05 17:34:28
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-03-16 21:56:04
+ * @LastEditTime: 2024-04-05 10:06:51
  * @FilePath: \electron-hiprint\src\set.js
  */
 "use strict";
 
-const { app, BrowserWindow, BrowserView, ipcMain, dialog } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  BrowserView,
+  ipcMain,
+  dialog,
+} = require("electron");
 const path = require("path");
 const { store } = require("../tools/utils");
 const log = require("../tools/log");
@@ -18,7 +24,7 @@ const log = require("../tools/log");
 async function createSetWindow() {
   const windowOptions = {
     width: 400, // 窗口宽度
-    height: 686, // 窗口高度
+    height: 600, // 窗口高度
     title: "设置",
     useContentSize: true, // 窗口大小不包含边框
     center: true, // 居中
@@ -69,7 +75,11 @@ function loadingView(windowOptions) {
     height: windowOptions.height,
   });
 
-  const loadingHtml = path.join("file://", app.getAppPath(), "assets/loading.html");
+  const loadingHtml = path.join(
+    "file://",
+    app.getAppPath(),
+    "assets/loading.html"
+  );
   loadingBrowserView.webContents.loadURL(loadingHtml);
 
   // 主窗口 dom 加载完毕，移除 loadingBrowserView

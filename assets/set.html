@@ -1,8 +1,8 @@
 <!--
  * @Date: 2023-09-05 13:56:58
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-04-02 15:27:51
- * @FilePath: /electron-hiprint/assets/set.html
+ * @LastEditTime: 2024-04-05 13:04:55
+ * @FilePath: \electron-hiprint\assets\set.html
 -->
 <!DOCTYPE html>
 <html>
@@ -35,6 +35,7 @@
         padding: 0;
       }
 
+      .el-input-number,
       .el-select,
       .el-button {
         width: 100%;
@@ -56,25 +57,35 @@
 
   <body class="hide-scrollbar">
     <div id="app">
-      <el-form v-model="formData" label-position="top" :rules="rules">
+      <el-form
+        ref="formRef"
+        :model="formData"
+        label-position="top"
+        :rules="rules"
+      >
         <!-- 端口设置 -->
         <el-form-item label="端口设置" prop="port">
-          <el-input
+          <el-input-number
             v-model="formData.port"
             size="small"
+            min="10000"
+            max="65535"
+            :controls="false"
             placeholder="请输入10000-65535之间的端口号(17521)"
-          ></el-input>
+          ></el-input-number>
         </el-form-item>
         <!-- TOKEN 设置 -->
         <el-form-item label="TOKEN 设置" prop="token">
           <el-input
             v-model="formData.token"
             size="small"
+            minlength="5"
+            maxlength="32"
             placeholder="请输入5-32个字符作为TOKEN"
           ></el-input>
         </el-form-item>
         <!-- 插件版本 设置 -->
-        <el-form-item label="插件版本设置" prop="pluginVersion">
+        <!-- <el-form-item label="插件版本设置" prop="pluginVersion">
           <el-select
             v-model="formData.pluginVersion"
             filterable
@@ -94,7 +105,7 @@
               </el-option>
             </template>
           </el-select>
-        </el-form-item>
+        </el-form-item> -->
         <!-- 开机启动设置 -->
         <el-row :gutter="12">
           <el-col :span="16">
@@ -244,25 +255,14 @@
                   message: "端口号不能为空",
                   trigger: "blur",
                 },
-                {
-                  type: "number",
-                  message: "端口号必须为数字",
-                  trigger: "blur",
-                },
-                {
-                  min: 10000,
-                  max: 65535,
-                  message: "端口号必须在10000-65535之间",
-                  trigger: "blur",
-                },
               ],
               token: [
                 {
-                  minlength: 5,
-                  maxlength: 32,
+                  min: 5,
+                  max: 32,
                   message: "只能输入5-32个字符作为TOKEN",
                   trigger: "blur",
-                },
+                }
               ],
               transitUrl: [
                 {
@@ -294,13 +294,12 @@
            * @param {Any} value change 值
            * @return {Void}
            */
-
           onChange({ prop, value }) {
             switch (prop) {
               case "connectTransit":
                 ipc.send("setContentSize", {
                   width: 400,
-                  height: value ? 862 : 688,
+                  height: value ? 776 : 600,
                 });
                 break;
               case "pluginVersion":
@@ -312,7 +311,6 @@
            * @description: 测试连接
            * @return {Void}
            */
-
           handleTest() {
             ipc.send("testTransit", {
               url: this.formData.transitUrl,
@@ -323,9 +321,14 @@
            * @description: 提交设置
            * @return {Void}
            */
-
           submit() {
-            ipc.send("setConfig", this.formData);
+            this.$refs.formRef.validate((valid) => {
+              if (valid) {
+                ipc.send("setConfig", this.formData);
+              } else {
+                return false;
+              }
+            })
           },
           /**
            * @description: 关闭窗口
@@ -340,7 +343,6 @@
            * @param {Any} data 数据
            * @return {Void}
            */
-
           onConfig(event, data) {
             this.formData = data;
             this.onChange({
