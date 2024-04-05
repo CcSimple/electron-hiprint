@@ -1,18 +1,20 @@
 <!--
  * @Date: 2023-09-05 13:56:58
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-02-20 13:12:03
+ * @LastEditTime: 2024-04-05 13:04:55
  * @FilePath: \electron-hiprint\assets\set.html
 -->
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8" />
+    <title>设置</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="./element-ui@2.15.14.theme-chalk.index.min.css"
-    />
+    <link rel="stylesheet" href="./element-ui/index.css" />
+    <script src="./js/vue.min.js"></script>
+    <script src="./element-ui/index.js"></script>
+    <script src="./js/dayjs.min.js"></script>
+    <script src="./js/lodash.min.js"></script>
     <style>
       html,
       body {
@@ -21,7 +23,7 @@
         user-select: none;
       }
 
-      .el-form {
+      #app {
         padding: 12px 22px;
       }
 
@@ -33,411 +35,352 @@
         padding: 0;
       }
 
-      input[type="number"]::-webkit-outer-spin-button,
-      input[type="number"]::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        appearance: none;
-        margin: 0;
+      .el-input-number,
+      .el-select,
+      .el-button {
+        width: 100%;
       }
 
-      button {
-        width: calc(50% - 8px);
-        height: 32px;
+      /* 隐藏滚动条，但仍然可以滚动 */
+      .hide-scrollbar {
+        -ms-overflow-style: none; /* IE 和 Edge */
+        scrollbar-width: none; /* Firefox */
       }
 
-      #transitTest {
-        width: calc(100% - 12px);
-        margin-left: 12px;
+      /* 在内容高度足够时显示滚动条，否则隐藏 */
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none; /* Chrome, Safari 和 Opera */
       }
     </style>
     <title>设置</title>
   </head>
 
-  <body>
-    <div class="el-form el-form--label-top">
-      <form id="form" action="#">
+  <body class="hide-scrollbar">
+    <div id="app">
+      <el-form
+        ref="formRef"
+        :model="formData"
+        label-position="top"
+        :rules="rules"
+      >
         <!-- 端口设置 -->
-        <div class="el-form-item is-required">
-          <div class="el-form-item__label">端口设置</div>
-          <div class="el-form-item__content">
-            <div class="el-input el-input--small">
-              <input
-                id="port"
-                name="port"
-                type="number"
-                min="10000"
-                max="65535"
-                class="el-input__inner"
-                placeholder="请输入10000-65535之间的端口号(17521)"
-              />
-            </div>
-          </div>
-        </div>
+        <el-form-item label="端口设置" prop="port">
+          <el-input-number
+            v-model="formData.port"
+            size="small"
+            min="10000"
+            max="65535"
+            :controls="false"
+            placeholder="请输入10000-65535之间的端口号(17521)"
+          ></el-input-number>
+        </el-form-item>
         <!-- TOKEN 设置 -->
-        <div class="el-form-item">
-          <div class="el-form-item__label">TOKEN 设置</div>
-          <div class="el-form-item__content">
-            <div class="el-input el-input--small">
-              <input
-                id="token"
-                name="token"
-                type="text"
-                minlength="5"
-                maxlength="32"
-                class="el-input__inner"
-                placeholder="请输入5-32个字符作为TOKEN"
-              />
-            </div>
-          </div>
-        </div>
+        <el-form-item label="TOKEN 设置" prop="token">
+          <el-input
+            v-model="formData.token"
+            size="small"
+            minlength="5"
+            maxlength="32"
+            placeholder="请输入5-32个字符作为TOKEN"
+          ></el-input>
+        </el-form-item>
+        <!-- 插件版本 设置 -->
+        <!-- <el-form-item label="插件版本设置" prop="pluginVersion">
+          <el-select
+            v-model="formData.pluginVersion"
+            filterable
+            size="small"
+            @change="onChange({prop: pluginVersion, value: $event})"
+          >
+            <template v-for="option in versions">
+              <el-option
+                :key="option.version"
+                :label="option.version"
+                :value="option.version"
+              >
+                <span>{{ option.version }}</span>
+                <span style="float: right;color: #8492a6;"
+                  >{{ option.updateTime }}</span
+                >
+              </el-option>
+            </template>
+          </el-select>
+        </el-form-item> -->
         <!-- 开机启动设置 -->
-        <div class="el-row">
-          <div class="el-col el-col-16">
-            <div class="el-form-item">
-              <div class="el-form-item__label">开机启动</div>
-              <div class="el-form-item__content">
-                <div class="el-switch" data-prop="openAtLogin">
-                  <input
-                    id="openAtLogin"
-                    name="openAtLogin"
-                    type="checkbox"
-                    class="el-switch__input"
-                    checked="false"
-                    value="true"
-                  />
-                  <span class="el-switch__core"></span>
-                </div>
-                <span>(请注意杀毒软件拦截)</span>
-              </div>
-            </div>
-          </div>
-          <div class="el-col el-col-8">
-            <div class="el-form-item">
-              <div class="el-form-item__label">自启后最小化</div>
-              <div class="el-form-item__content">
-                <div class="el-switch" data-prop="openAsHidden">
-                  <input
-                    id="openAsHidden"
-                    name="openAsHidden"
-                    type="checkbox"
-                    class="el-switch__input"
-                    checked="false"
-                    value="true"
-                  />
-                  <span class="el-switch__core"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <el-row :gutter="12">
+          <el-col :span="16">
+            <el-form-item label="开机启动" prop="openAtLogin">
+              <el-switch v-model="formData.openAtLogin"></el-switch>
+              <span>(请注意杀毒软件拦截)</span>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="自启后最小化" prop="openAsHidden">
+              <el-switch v-model="formData.openAsHidden"></el-switch>
+            </el-form-item>
+          </el-col>
+        </el-row>
         <!-- 连接中转服务开关 -->
-        <div class="el-form-item">
-          <div class="el-form-item__label">连接中转服务(node-hiprint-transit)</div>
-          <div class="el-form-item__content">
-            <div class="el-switch" data-prop="connectTransit">
-              <input
-                id="connectTransit"
-                name="connectTransit"
-                type="checkbox"
-                class="el-switch__input"
-                checked="false"
-                value="true"
-              />
-              <span class="el-switch__core"></span>
-            </div>
-          </div>
-        </div>
-        <!-- 中转服务 地址、token 设置 -->
-        <div id="transit">
-          <div class="el-form-item is-required">
-            <div class="el-form-item__label">服务器地址</div>
-            <div class="el-form-item__content">
-              <div class="el-input el-input--small">
-                <input
-                  id="transitUrl"
-                  name="transitUrl"
-                  type="text"
-                  class="el-input__inner"
-                  placeholder="请输入中转服务地址"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="el-form-item is-required">
-            <div class="el-form-item__label">服务器 TOKEN</div>
-            <div class="el-form-item__content">
-              <div class="el-row">
-                <div class="el-col-18">
-                  <div class="el-input el-input--small">
-                    <input
-                      id="transitToken"
-                      name="transitToken"
-                      type="text"
-                      class="el-input__inner"
-                      placeholder="请输入中转服务 TOKEN"
-                    />
-                  </div>
-                </div>
-                <div class="el-col-6">
-                  <button
-                    id="transitTest"
-                    class="el-button el-button--default el-button--mini"
-                  >
-                    <span>测试</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="el-form-item">
-          <div class="el-form-item__label">允许通知</div>
-          <div class="el-form-item__content">
-            <div class="el-switch" data-prop="allowNotify">
-              <input
-                id="allowNotify"
-                name="allowNotify"
-                type="checkbox"
-                class="el-switch__input"
-                checked="false"
-                value="true"
-              />
-              <span class="el-switch__core"></span>
-            </div>
-          </div>
-        </div>
-        <!-- 关闭窗口设置 -->
-        <div class="el-form-item">
-          <div class="el-form-item__label">关闭主窗口</div>
-          <div class="el-form-item__content">
-            <div id="closeType" class="el-radio-group">
-              <label class="el-radio">
-                <span class="el-radio__input">
-                  <span class="el-radio__inner"></span>
-                  <input
-                    name="closeType"
-                    type="radio"
-                    class="el-radio__original"
-                    checked="false"
-                    value="tray"
-                  />
-                </span>
-                <span class="el-radio__label">最小化到托盘</span>
-              </label>
-              <label class="el-radio">
-                <span class="el-radio__input">
-                  <span class="el-radio__inner"></span>
-                  <input
-                    name="closeType"
-                    type="radio"
-                    class="el-radio__original"
-                    checked="false"
-                    value="quit"
-                  />
-                </span>
-                <span class="el-radio__label">退出程序</span>
-              </label>
-            </div>
-          </div>
-        </div>
-        <div class="el-form-item">
-          <div class="el-form-item__content">
-            <button
-              id="submit"
-              class="el-button el-button--primary el-button--mini"
-            >
-              <span>应用</span>
-            </button>
-            <button
-              id="close"
-              class="el-button el-button--default el-button--mini"
-            >
-              <span>关闭</span>
-            </button>
-          </div>
-        </div>
-      </form>
+        <el-form-item
+          label="连接中转服务(node-hiprint-transit)"
+          prop="connectTransit"
+        >
+          <el-switch
+            v-model="formData.connectTransit"
+            @change="onChange({prop: 'connectTransit', value: $event})"
+          ></el-switch>
+        </el-form-item>
+        <template v-if="formData.connectTransit">
+          <!-- 中转服务 token 设置 -->
+          <el-form-item label="服务器地址" prop="transitUrl">
+            <el-input
+              v-model="formData.transitUrl"
+              size="small"
+              placeholder="请输入中转服务地址"
+            ></el-input>
+          </el-form-item>
+          <el-row :gutter="12">
+            <el-col :span="18">
+              <!-- 中转服务 token 设置 -->
+              <el-form-item label="TOKEN 设置" prop="transitToken">
+                <el-input
+                  v-model="formData.transitToken"
+                  size="small"
+                  placeholder="请输入中转服务 TOKEN"
+                ></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <!-- 测试中转服务 连接 -->
+              <el-form-item label="连通性测试">
+                <el-button class="transitTest" size="small" @click="handleTest">
+                  测试
+                </el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </template>
+        <!-- 允许通知 设置 -->
+        <el-form-item label="允许通知" prop="allowNotify">
+          <el-switch v-model="formData.allowNotify"></el-switch>
+        </el-form-item>
+        <!-- 关闭窗口 设置 -->
+        <el-form-item label="关闭主窗口" prop="closeType">
+          <el-radio-group v-model="formData.closeType">
+            <el-radio label="tray">最小化到托盘</el-radio>
+            <el-radio label="quit">退出程序</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <!-- 按钮组 -->
+        <el-form-item>
+          <el-row :gutter="12">
+            <el-col span="12">
+              <el-button type="primary" size="small" @click="submit"
+                >应用</el-button
+              >
+            </el-col>
+            <el-col span="12">
+              <el-button size="small" @click="close">关闭</el-button>
+            </el-col>
+          </el-row>
+        </el-form-item>
+      </el-form>
     </div>
-    <script>
-      window.$ = window.jQuery = require("jquery");
+    <script type="text/javascript">
       const { ipcRenderer } = require("electron");
+      const Store = require("electron-store");
+      const store = new Store();
+
       let ipc = ipcRenderer;
-      $(document).ready(() => {
-        $("#transit").hide();
-        // 为所有input添加change事件
-        $("input").on("change", function() {
-          // radio 单选类型需要切换 parent 元素的 class 修改选中样式
-          if ($(this).attr("type") === "radio") {
-            $(this)
-              .parents(".el-radio__input")
-              .addClass("is-checked");
-            $(this)
-              .parents(".el-radio")
-              .siblings()
-              .find(".el-radio__input")
-              .removeClass("is-checked");
-          }
-        });
-        // 开关无法由input触发change事件，所以需要手动绑定click事件
-        $(".el-switch").click(function() {
-          // 获取开关对应input元素
-          var input = $(this).find("input");
-          // 获取开关状态值
-          var val = input.prop("checked");
-          // 设置开关值
-          input.prop("checked", !val);
-          // 触发change事件
-          input.trigger("change");
-          // 切换开关样式
-          if (val) {
-            $(this).removeClass("is-checked");
-          } else {
-            $(this).addClass("is-checked");
-          }
-          // 中转服务开关切换，为了动画更加流畅，这里根据开启关闭情况按不同顺序执行代码
-          if ($(this).find("input")[0].id === "connectTransit") {
-            // 开启
-            if (!val) {
-              ipc.send("setContentSize", {
-                width: 400,
-                height: 776,
-              });
-              $("#transit").show(250);
-            }
-            // 关闭
-            else {
-              $("#transit").hide(250);
-              setTimeout(() => {
+      new Vue({
+        el: "#app",
+        data: () => {
+          return {
+            // 设置值
+            formData: {
+              port: 17521,
+              token: "",
+              pluginVersion: "",
+              openAtLogin: false,
+              openAsHidden: false,
+              connectTransit: false,
+              transitUrl: "",
+              transitToken: "",
+              allowNotify: false,
+              closeType: "tray",
+            },
+            // 预制的版本，解决部分内网无法获取新版本的问题
+            versions: [
+              {
+                version: "0.0.56",
+                time: 1700405025750,
+                updateTime: "2023/11/19 22:43:45",
+              },
+              {
+                version: "0.0.54-fix",
+                time: 1688956459696,
+                updateTime: "2023/07/10 10:34:19",
+              },
+              {
+                version: "0.0.54",
+                time: 1688525681271,
+                updateTime: "2023/07/05 10:54:41",
+              },
+              {
+                version: "0.0.52",
+                time: 1683539873782,
+                updateTime: "2023/05/08 17:57:53",
+              },
+              {
+                version: "0.0.50",
+                time: 1680228434697,
+                updateTime: "2023/03/31 10:07:14",
+              },
+              {
+                version: "0.0.48",
+                time: 1678354234564,
+                updateTime: "2023/03/09 17:30:34",
+              },
+              {
+                version: "0.0.46",
+                time: 1677118403361,
+                updateTime: "2023/02/23 10:13:23",
+              },
+            ],
+            // 校验规则
+            rules: {
+              port: [
+                {
+                  required: true,
+                  message: "端口号不能为空",
+                  trigger: "blur",
+                },
+              ],
+              token: [
+                {
+                  min: 5,
+                  max: 32,
+                  message: "只能输入5-32个字符作为TOKEN",
+                  trigger: "blur",
+                }
+              ],
+              transitUrl: [
+                {
+                  required: true,
+                  message: "中转服务器地址不能为空",
+                  trigger: "blur",
+                },
+              ],
+              transitToken: [
+                {
+                  required: true,
+                  message: "中转服务 Token 不能为空",
+                  trigger: "blur",
+                },
+              ],
+            },
+          };
+        },
+        created() {
+          // 获取配置
+          ipc.send("getConfig");
+          ipc.on("onConfig", this.onConfig);
+          this.getVersions();
+        },
+        methods: {
+          /**
+           * @description: 表单 change 事件
+           * @param {String} prop change 字段名
+           * @param {Any} value change 值
+           * @return {Void}
+           */
+          onChange({ prop, value }) {
+            switch (prop) {
+              case "connectTransit":
                 ipc.send("setContentSize", {
                   width: 400,
-                  height: 600,
+                  height: value ? 776 : 600,
                 });
-              }, 250);
-            }
-          }
-        });
-        // 表单提交事件
-        $("#form").submit(function(event) {
-          // 阻止表单默认提交事件
-          event.preventDefault();
-          // 获取表单数据
-          const formDataArr = $(this).serializeArray();
-          // switch 未开启时无法获取到值，所以需要手动添加默认值 false
-          const formData = {
-            openAtLogin: false, // 开机启动
-            openAsHidden: false, // 自启后最小化
-            allowNotify: false, // 允许通知
-          };
-          // 连接中转服务开关
-          formData.connectTransit =
-            formDataArr.find(({ name }) => name === "connectTransit")?.value ||
-            false;
-          for (let index in formDataArr) {
-            var item = formDataArr[index];
-            switch (item.name) {
-              case "transitUrl": // 中转服务地址
-              case "transitToken": // 中转服务 TOKEN
-                if (formData.connectTransit && !item.value) {
-                  var message = `${
-                    { transitUrl: "服务器地址", transitToken: "服务器 TOKEN" }[
-                      item.name
-                    ]
-                  } 不能为空！`;
-                  ipc.send("showMessageBox", {
-                    type: "error",
-                    title: "错误",
-                    message,
-                    buttons: ["确定"],
-                  });
-                  return false;
-                }
-                formData[item.name] = item.value;
                 break;
-              case "port": // 端口号
-                if (!item.value) {
-                  ipc.send("showMessageBox", {
-                    type: "error",
-                    title: "错误",
-                    message: "端口号 不能为空！",
-                    buttons: ["确定"],
-                  });
-                  return false;
-                }
-                formData[item.name] = item.value * 1;
-                break;
-              case "closeType": // 关闭窗口设置
-                formData[item.name] = item.value;
-                break;
-              case "token": // TOKEN
-                formData[item.name] = item.value || "";
-                break;
-              case "openAtLogin": // 开机启动
-              case "openAsHidden": // 自启后最小化
-              case "connectTransit": // 连接中转服务
-              case "allowNotify": // 允许通知
-                formData[item.name] = item.value === "true";
+              case "pluginVersion":
+                // TODO: 下载插件对应 js、css 文件到本地
                 break;
             }
-          }
-          // 让页面主进程执行 setConfig 方法
-          ipc.send("setConfig", formData);
-        });
-        $("button#close").click(function(event) {
-          event.preventDefault();
-          ipc.send("closeSetWindow");
-        });
-        $("button#transitTest").click(function(event) {
-          event.preventDefault();
-          ipc.send("testTransit", {
-            url: $("#transitUrl").val(),
-            token: $("#transitToken").val(),
-          });
-        });
-        // 请求配置信息
-        ipc.send("getConfig");
-        // 监听配置信息
-        ipc.on("onConfig", (event, data) => {
-          Object.keys(data).forEach((key) => {
-            switch (key) {
-              case "port":
-              case "token":
-              case "transitUrl":
-              case "transitToken":
-                $(`#${key}`).val(data[key]);
-                break;
-              case "connectTransit":
-                if (data[key]) {
-                  $(`.el-switch[data-prop=${key}]`).addClass("is-checked");
-                  $(`#${key}`).prop("checked", true);
-                  ipc.send("setContentSize", {
-                    width: 400,
-                    height: 776,
-                  });
-                  $("#transit").show(250);
-                } else {
-                  $(`#${key}`).prop("checked", false);
-                  $("#transit").hide();
-                }
-                break;
-              case "openAtLogin":
-              case "openAsHidden":
-              case "allowNotify":
-                if (data[key]) {
-                  $(`.el-switch[data-prop=${key}]`).addClass("is-checked");
-                  $(`#${key}`).prop("checked", true);
-                } else {
-                  $(`#${key}`).prop("checked", false);
-                }
-                break;
-              case "closeType":
-                $(`#${key} input[value=${data[key]}]`).prop("checked", true);
-                $(`#${key} input[value=${data[key]}]`)
-                  .parents(".el-radio__input")
-                  .addClass("is-checked");
-                break;
-            }
-          });
-        });
+          },
+          /**
+           * @description: 测试连接
+           * @return {Void}
+           */
+          handleTest() {
+            ipc.send("testTransit", {
+              url: this.formData.transitUrl,
+              token: this.formData.transitToken,
+            });
+          },
+          /**
+           * @description: 提交设置
+           * @return {Void}
+           */
+          submit() {
+            this.$refs.formRef.validate((valid) => {
+              if (valid) {
+                ipc.send("setConfig", this.formData);
+              } else {
+                return false;
+              }
+            })
+          },
+          /**
+           * @description: 关闭窗口
+           * @return {Void}
+           */
+          close() {
+            ipc.send("closeSetWindow");
+          },
+          /**
+           * @description: 获取配置
+           * @param {IpcRendererEvent} event 事件
+           * @param {Any} data 数据
+           * @return {Void}
+           */
+          onConfig(event, data) {
+            this.formData = data;
+            this.onChange({
+              prop: "connectTransit",
+              value: data.connectTransit,
+            });
+          },
+          /**
+           * @description: 获取在线版本信息
+           * @return {Void}
+           */
+          getVersions() {
+            const xhr = new XMLHttpRequest();
+            // cnpm 源
+            xhr.open(
+              "GET",
+              "https://registry.npmmirror.com/vue-plugin-hiprint"
+            );
+            xhr.onload = () => {
+              if (xhr.status === 200) {
+                this.npmInfo = JSON.parse(xhr.responseText);
+                this.versions = _.orderBy(
+                  _.map(this.npmInfo.versions, ({ version }) => ({
+                    version,
+                    time: dayjs(this.npmInfo.time[version]).valueOf(),
+                    updateTime: dayjs(this.npmInfo.time[version]).format(
+                      "YYYY/MM/DD HH:mm:ss"
+                    ),
+                  })),
+                  "time",
+                  "desc"
+                );
+                this.formData.pluginVersion = this.versions[0].version;
+              }
+            };
+            xhr.send();
+          },
+        },
       });
     </script>
   </body>

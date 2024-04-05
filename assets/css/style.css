@@ -93,8 +93,8 @@ body {
   align-items: center;
 }
 
-#seticon {
-  display: none;
+.seticon {
+  display: none!important;
   cursor: pointer;
   font-size: 32px;
   line-height: 50px;
@@ -103,8 +103,8 @@ body {
   -webkit-animation: rotatiing 2s linear infinite;
 }
 
-.title:hover>#seticon {
-  display: inline-block;
+.title:hover>.seticon {
+  display: inline-block!important;
 }
 
 .message {

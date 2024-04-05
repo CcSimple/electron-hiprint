@@ -1,7 +1,7 @@
 /*
  * @Date: 2024-01-25 15:52:14
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-03-09 12:51:06
+ * @LastEditTime: 2024-04-05 09:41:20
  * @FilePath: \electron-hiprint\main.js
  */
 const {
@@ -142,6 +142,7 @@ async function createWindow() {
     useContentSize: true, // 窗口大小不包含边框
     center: true, // 居中
     resizable: false, // 不可缩放
+    show: store.get("openAsHidden") ? false : true, // 显示
     webPreferences: {
       // 设置此项为false后，才可在渲染进程中使用 electron api
       contextIsolation: false,
@@ -164,7 +165,7 @@ async function createWindow() {
   systemSetup();
 
   // 加载主页面
-  const indexHtml = path.join("file://", __dirname, "/assets/index.html");
+  const indexHtml = path.join("file://", app.getAppPath(), "assets/index.html");
   MAIN_WINDOW.webContents.loadURL(indexHtml);
 
   // 未打包时打开开发者工具
@@ -249,7 +250,7 @@ function loadingView(windowOptions) {
     height: windowOptions.height,
   });
 
-  const loadingHtml = path.join("file://", __dirname, "/assets/loading.html");
+  const loadingHtml = path.join("file://", app.getAppPath(), "assets/loading.html");
   loadingBrowserView.webContents.loadURL(loadingHtml);
 
   // 主窗口 dom 加载完毕，移除 loadingBrowserView
@@ -272,7 +273,7 @@ function systemSetup() {
  * @return {Tray} APP_TRAY 托盘实例
  */
 function initTray() {
-  let trayPath = path.join(app.getAppPath(), "/assets/icons/tray.png");
+  let trayPath = path.join(app.getAppPath(), "assets/icons/tray.png");
 
   APP_TRAY = new Tray(trayPath);
 
@@ -342,11 +343,3 @@ async function openSetWindow() {
 
 // 初始化主窗口
 initialize();
-setTimeout(() => {
-  if (store.get("openAsHidden")) {
-    // 隐藏主窗口
-    MAIN_WINDOW.hide();
-    // 隐藏任务栏
-    MAIN_WINDOW.setSkipTaskbar(true);
-  }
-}, 1000);

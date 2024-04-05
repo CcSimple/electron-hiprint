@@ -1,7 +1,7 @@
 <!--
  * @Date: 2022-09-13 11:11:52
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2023-12-19 16:28:47
+ * @LastEditTime: 2024-04-05 13:08:31
  * @FilePath: \electron-hiprint\assets\index.html
 -->
 <!DOCTYPE html>
@@ -9,92 +9,117 @@
   <head>
     <meta charset="UTF-8" />
     <title>Electron-hiprint</title>
-    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./css/style.css" />
     <link
       rel="stylesheet"
-      href="./element-ui@2.15.14.theme-chalk.index.min.css"
+      href="./element-ui/index.css"
     />
+    <script src="./js/vue.min.js"></script>
+    <script src="./element-ui/index.js"></script>
   </head>
 
   <body>
-    <div class="box">
+    <div id="app" class="box">
       <div class="background">
-        <div class="bg-primary active"></div>
-        <div class="bg-success"></div>
-        <div class="bg-warning"></div>
+        <div class="bg-primary" :class="{active: !transitActiveFlag}"></div>
+        <div
+          class="bg-success"
+          :class="{active: socketActiveNum || transitActiveFlag}"
+        ></div>
+        <div class="bg-warning" :class="{active: printing}"></div>
       </div>
       <div class="container">
         <div class="info">
           <div class="title">
-            打印服务已启动<i id="seticon" class="el-icon-setting"></i>
+            打印服务已启动<i class="el-icon-setting seticon" @click="openSetting"></i>
           </div>
-          <div class="message row">服务地址：<span id="ipAddress"></span></div>
-          <div class="message row">MAC地址：<span id="macAddress"></span></div>
+          <div class="message row">
+            服务地址：<span @click="handleCopy">{{ ipAddress }}</span>
+          </div>
+          <div class="message row">
+            MAC地址：<span @click="handleCopy">{{ macAddress }}</span>
+          </div>
         </div>
         <div class="status">
-          <div class="message" data-prop="transitStatus">
-            中转状态: <span id="transitStatus">未连接</span>
+          <div class="message">
+            中转状态: <span>{{ transitActiveFlag ? '已' : '未' }}连接</span>
           </div>
-          <div class="message" data-prop="connectionStatus">
-            本地连接：<span id="connectionStatus">未连接</span>
+          <div class="message">
+            本地连接：
+            <span>
+              {{ socketActiveNum ? `已建立 ${socketActiveNum} 条` : '未' }}连接
+            </span>
           </div>
-          <div class="message" data-prop="printedQueue">
-            打印状态：<span id="printedQueue">空闲</span>
+          <div class="message">
+            打印状态：<span>{{ printing ? "文档打印中" : "空闲" }}</span>
           </div>
-          <div class="message row">设备编号：<span id="deviceId"></span></div>
+          <div class="message row">设备编号：<span @click="handleCopy">{{ deviceId }}</span></div>
+          <!-- <div class="message">
+            插件版本：{{ pluginVersion }}
+          </div>
+          <div class="message">
+            客户端版本：{{ process.env.npm_package_version }}
+          </div> -->
         </div>
       </div>
     </div>
     <script type="text/javascript">
-      window.$ = window.jQuery = require("jquery");
       const { ipcRenderer, clipboard } = require("electron");
-
-      const Store = require('electron-store');
-
+      const Store = require("electron-store");
       const store = new Store();
 
       document.title = store.get("mainTitle") || "Electron-hiprint";
 
       let ipc = ipcRenderer;
-      $(document).ready(() => {
-        $("#seticon").click(() => {
-          ipc.send("openSetting");
-        });
-        $("#ipAddress,#macAddress,#deviceId").click((event) => {
-          clipboard.writeText(event.target.innerText);
-          ipc.send("notification", {
-            title: "复制成功",
-            body: "文本已成功复制到剪贴板中！",
+      new Vue({
+        el: "#app",
+        data: () => {
+          return {
+            macAddress: "",
+            ipAddress: "",
+            deviceId: "",
+            transitActiveFlag: false,
+            socketActiveNum: 0,
+            printing: false,
+            version: "1.0.10",
+            pluginVersion: store.get("pluginVersion") || "未指定",
+          };
+        },
+        created() {
+          ipc.send("getMachineId");
+          ipc.on("machineId", (event, arg) => {
+            this.deviceId = arg;
           });
-        });
-        ipc.send("getMachineId");
-        ipc.on("machineId", (event, arg) => {
-          $("#deviceId").html(arg);
-        });
-        ipc.send("getAddress");
-        ipc.on("address", (event, arg) => {
-          $("#ipAddress").html(`http://${arg.ip}:${arg.port || 17521}`);
-          $("#macAddress").html(arg.mac);
-        });
-        ipc.on("serverConnection", socketActive);
-        ipc.on("printTask", (event, arg) => {
-          $("#printedQueue").html(arg ? "文档打印中" : "空闲");
-          $(".bg-warning")[arg ? "addClass" : "removeClass"]("active");
-        });
-        ipc.on("clientConnection", transitActive);
+          ipc.send("getAddress");
+          ipc.on("address", (event, arg) => {
+            this.ipAddress = `http://${arg.ip}:${arg.port || 17521}`;
+            this.macAddress = arg.mac;
+          });
+          ipc.on("serverConnection", this.socketActive);
+          ipc.on("printTask", (event, arg) => {
+            this.printing = arg;
+          });
+          ipc.on("clientConnection", this.transitActive);
+        },
+        methods: {
+          openSetting() {
+            ipc.send("openSetting");
+          },
+          handleCopy(event) {
+            clipboard.writeText(event.target.innerText);
+            ipc.send("notification", {
+              title: "复制成功",
+              body: "文本已成功复制到剪贴板中！",
+            });
+          },
+          socketActive(evnet, arg) {
+            this.socketActiveNum = arg;
+          },
+          transitActive(event, arg) {
+            this.transitActiveFlag = arg;
+          },
+        },
       });
-      function socketActive(event, arg) {
-        console.log("socketActive", arg)
-        $("#connectionStatus").html(
-          `${arg ? "已建立 " + arg + " 条" : "未"}连接`
-        );
-        $(".bg-success")[arg ? "addClass" : "removeClass"]("active");
-      }
-      function transitActive(event, arg) {
-        console.log("transitActive", arg)
-        $("#transitStatus").html(`${arg ? "已" : "未"}连接`);
-        $(".bg-success")[arg ? "addClass" : "removeClass"]("active");
-      }
     </script>
   </body>
 </html>

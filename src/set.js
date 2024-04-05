@@ -1,12 +1,18 @@
 /*
  * @Date: 2023-09-05 17:34:28
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-03-09 12:00:46
+ * @LastEditTime: 2024-04-05 10:06:51
  * @FilePath: \electron-hiprint\src\set.js
  */
 "use strict";
 
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  BrowserView,
+  ipcMain,
+  dialog,
+} = require("electron");
 const path = require("path");
 const { store } = require("../tools/utils");
 const log = require("../tools/log");
@@ -19,6 +25,7 @@ async function createSetWindow() {
   const windowOptions = {
     width: 400, // 窗口宽度
     height: 600, // 窗口高度
+    title: "设置",
     useContentSize: true, // 窗口大小不包含边框
     center: true, // 居中
     alwaysOnTop: true, // 永远置顶
@@ -31,6 +38,9 @@ async function createSetWindow() {
 
   // 创建设置窗口
   SET_WINDOW = new BrowserWindow(windowOptions);
+
+  // 添加加载页面 解决白屏的问题
+  loadingView(windowOptions);
 
   // 加载设置渲染进程页面
   const setHtmlUrl = path.join("file://", app.getAppPath(), "assets/set.html");
@@ -51,6 +61,34 @@ async function createSetWindow() {
 }
 
 /**
+ * @description: 加载等待页面，解决主窗口白屏问题
+ * @param {Object} windowOptions 主窗口配置
+ * @return {Void}
+ */
+function loadingView(windowOptions) {
+  const loadingBrowserView = new BrowserView();
+  SET_WINDOW.setBrowserView(loadingBrowserView);
+  loadingBrowserView.setBounds({
+    x: 0,
+    y: 0,
+    width: windowOptions.width,
+    height: windowOptions.height,
+  });
+
+  const loadingHtml = path.join(
+    "file://",
+    app.getAppPath(),
+    "assets/loading.html"
+  );
+  loadingBrowserView.webContents.loadURL(loadingHtml);
+
+  // 主窗口 dom 加载完毕，移除 loadingBrowserView
+  SET_WINDOW.webContents.on("dom-ready", async (event) => {
+    SET_WINDOW.removeBrowserView(loadingBrowserView);
+  });
+}
+
+/**
  * @description: 渲染进程触发获取配置
  * @param {IpcMainEvent} event
  * @return {Void}
@@ -66,7 +104,7 @@ function getConfig(event) {
  * @return {Void}
  */
 function setConfig(event, data) {
-  log("==> 设置窗口：保存配置 <==")
+  log("==> 设置窗口：保存配置 <==");
   // 保存配置前，弹出 dialog 确认
   dialog
     .showMessageBox(SET_WINDOW, {
@@ -77,7 +115,7 @@ function setConfig(event, data) {
     })
     .then((res) => {
       if (res.response === 0) {
-        store.set(data)
+        store.set(data);
         setTimeout(() => {
           app.relaunch();
           app.exit();
