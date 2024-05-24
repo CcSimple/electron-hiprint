@@ -7,7 +7,8 @@
   "license": "MIT",
   "homepage": "https://gitee.com/CcSimple",
   "scripts": {
-    "start": "node ./tools/start.js",
+    "start": "chcp 65001 & electron .",
+    "startmac": "electron .",
     "build-w": "electron-builder -w nsis:ia32 && node ./tools/rename --tag win_x32",
     "build-w-64": "electron-builder -w nsis:x64 && node ./tools/rename --tag win_x64",
     "build-m": "electron-builder -m --x64 && node ./tools/rename --tag mac_x64",
