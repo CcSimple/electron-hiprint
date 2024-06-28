@@ -22,7 +22,10 @@ cd electron-hiprint
 npm install
 
 # 调试预览
+# win
 npm run start
+# mac
+npm run startmac
 
 # 打包 win x64，其余平台版本详情见 package.json
 npm run build-w-64
