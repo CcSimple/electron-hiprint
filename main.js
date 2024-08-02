@@ -153,6 +153,11 @@ async function createWindow() {
   // 窗口左上角图标
   if (!app.isPackaged) {
     windowOptions.icon = path.join(__dirname, "build/icons/256x256.png");
+  } else {
+    app.setLoginItemSettings({
+      openAtLogin: store.get("openAtLogin"),
+      openAsHidden: store.get("openAsHidden"),
+    });
   }
 
   // 创建主窗口
