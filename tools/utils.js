@@ -120,6 +120,11 @@ const _address = {
 };
 
 /**
+ * @description: 检查分片任务实例，用于自动删除超时分片信息
+ */
+const watchTaskInstance = generateWatchTask(() => global.PRINT_FRAGMENTS_MAPPING)();
+
+/**
  * @description: 抛出当前客户端信息，提供更多有价值的信息，逐步替换原有 address
  * @param {io.Socket} socket
  * @return {Void}
@@ -137,6 +142,58 @@ function emitClientInfo(socket) {
       machineId: machineIdSync({ original: true }), // 客户端唯一id
     });
   });
+}
+
+/**
+ * 生成检查分片任务的闭包函数
+ * @param {Object} getCheckTarget 获取校验对象，最后会得到global.PRINT_FRAGMENTS_MAPPING
+ * @returns {Function}
+ */
+function generateWatchTask(getCheckTarget) {
+  // 记录当前检查任务是否开启，避免重复开启任务
+  let isWatching = false;
+  /**
+   * @description: 检查分片任务实例创建函数
+   * @param {Object} config 检查参数，根据实际情况调整
+   * @param {number} [config.checkInterval=5] 执行内存检查的时间间隔，单位分钟
+   * @param {number} [config.expire=10] 分片信息过期时间，单位分钟，不应过小
+   */
+  return function generateWatchTaskInstance(config = {}) {
+    // 合并用户和默认配置
+    const realConfig = Object.assign({
+      checkInterval: 5, // 默认检查间隔
+      expire: 10,  // 默认过期时间
+    }, config);
+    return {
+      startWatch() {
+        if (isWatching) return;
+        this.createWatchTimeout();
+      },
+      createWatchTimeout() {
+        // 更新开关状态
+        isWatching = true
+        return setTimeout(this.clearFragmentsWhichIsExpired.bind(this), realConfig.checkInterval * 60 * 1000);
+      },
+      clearFragmentsWhichIsExpired() {
+        const checkTarget = getCheckTarget();
+        const currentTimeStamp = Date.now();
+        Object.entries(checkTarget).map(([id, fragmentInfo]) => {
+          // 获取任务最后更新时间
+          const { updateTime } = fragmentInfo
+          // 任务过期时，清除任务信息释放内存
+          if ((currentTimeStamp - updateTime) > realConfig.expire * 60 * 1000) {
+            delete checkTarget[id]
+          }
+        });
+        // 获取剩余任务数量
+        const printTaskCount = Object.keys(checkTarget).length;
+        // 还有打印任务，继续创建检查任务
+        if (printTaskCount) this.createWatchTimeout();
+        // 更新开关状态
+        else isWatching = false;
+      }
+    }
+  }
 }
 
 /**
@@ -316,6 +373,41 @@ function initServeEvent(server) {
           MAIN_WINDOW.webContents.send("printTask", true);
           PRINT_RUNNER_DONE[data.taskId] = done;
         });
+      }
+    });
+
+    /**
+     * @description: client 分批打印任务
+     */
+    socket.on('printByFragments', (data) => {
+      if (data) {
+        const { total, index, htmlFragment, id, } = data
+        const currentInfo = PRINT_FRAGMENTS_MAPPING[id]
+          || (PRINT_FRAGMENTS_MAPPING[id] = { total, fragments: [], count: 0, updateTime: 0, })
+        // 添加片段信息
+        currentInfo.fragments[index] = htmlFragment;
+        // 计数
+        currentInfo.count++;
+        // 记录更新时间
+        currentInfo.updateTime = Date.now();
+        // 全部片段已传输完毕
+        if (currentInfo.count === currentInfo.total) {
+          // 清除全局缓存
+          delete PRINT_FRAGMENTS_MAPPING[id]
+          // 合并全部打印片段信息
+          data.html = currentInfo.fragments.join('')
+          // 添加打印任务
+          PRINT_RUNNER.add((done) => {
+            data.socketId = socket.id;
+            data.taskId = new Date().getTime();
+            data.clientType = "local";
+            PRINT_WINDOW.webContents.send("print-new", data);
+            MAIN_WINDOW.webContents.send("printTask", true);
+            PRINT_RUNNER_DONE[data.taskId] = done;
+          });
+        }
+        // 开始检查任务
+        watchTaskInstance.startWatch();
       }
     });
 
