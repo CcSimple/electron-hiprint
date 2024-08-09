@@ -45,6 +45,17 @@ global.SOCKET_CLIENT = null;
 global.PRINT_RUNNER = new TaskRunner({ concurrency: 1 });
 // 打印队列 done 集合
 global.PRINT_RUNNER_DONE = {};
+// 分批打印任务的打印任务信息
+global.PRINT_FRAGMENTS_MAPPING = {
+  // [id: string]: { // 当前打印任务id，当此任务完成或超过指定时间会删除该对象
+  //   {
+  //      total: number, // html片段总数
+  //      count: number, // 已经保存完成的片段数量，当count与total相同时，所有片段传输完成
+  //      fragments: Array<string | undefined>, // 按照顺序摆放的html文本片段
+  //      updateTime: number, // 最后更新此任务信息的时间戳，用于超时时移除此对象
+  //   }
+  // }
+};
 
 // socket.io 服务端，用于创建本地服务
 const ioServer = (global.SOCKET_SERVER = new require("socket.io")(server, {
