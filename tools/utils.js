@@ -365,13 +365,11 @@ function initServeEvent(server) {
      */
     socket.on("news", (data) => {
       if (data) {
-        PRINT_RUNNER.add((done) => {
-          data.socketId = socket.id;
-          data.taskId = new Date().getTime();
-          data.clientType = "local";
-          PRINT_WINDOW.webContents.send("print-new", data);
-          MAIN_WINDOW.webContents.send("printTask", true);
-          PRINT_RUNNER_DONE[data.taskId] = done;
+        data.socketId = socket.id;
+        data.clientType = "local";
+        PRINT_QUEUE.createJob({
+          type: "print",
+          data: data,
         });
       }
     });
@@ -396,14 +394,12 @@ function initServeEvent(server) {
           delete PRINT_FRAGMENTS_MAPPING[id]
           // 合并全部打印片段信息
           data.html = currentInfo.fragments.join('')
+          data.socketId = socket.id;
+          data.clientType = "local";
           // 添加打印任务
-          PRINT_RUNNER.add((done) => {
-            data.socketId = socket.id;
-            data.taskId = new Date().getTime();
-            data.clientType = "local";
-            PRINT_WINDOW.webContents.send("print-new", data);
-            MAIN_WINDOW.webContents.send("printTask", true);
-            PRINT_RUNNER_DONE[data.taskId] = done;
+          PRINT_QUEUE.createJob({
+            type: "print",
+            data: data,
           });
         }
         // 开始检查任务
@@ -551,13 +547,11 @@ function initClientEvent() {
    */
   client.on("news", (data) => {
     if (data) {
-      PRINT_RUNNER.add((done) => {
-        data.socketId = client.id;
-        data.taskId = new Date().getTime();
-        data.clientType = "transit";
-        PRINT_WINDOW.webContents.send("print-new", data);
-        MAIN_WINDOW.webContents.send("printTask", true);
-        PRINT_RUNNER_DONE[data.taskId] = done;
+      data.socketId = client.id;
+      data.clientType = "transit";
+      PRINT_QUEUE.createJob({
+        type: "print",
+        data: data,
       });
     }
   });

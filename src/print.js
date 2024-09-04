@@ -79,6 +79,9 @@ function initPrintEvent() {
       }
     });
     if (printerError) {
+      PRINT_QUEUE.findJob(data.taskId).then((job)=>{
+        job.setProgress(0, 100)
+      });
       log(
         `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印失败，打印机异常，打印机：${data.printer}`
       );
@@ -88,10 +91,6 @@ function initPrintEvent() {
           templateId: data.templateId,
           replyId: data.replyId,
         });
-      // 通过 taskMap 调用 task done 回调
-      PRINT_RUNNER_DONE[data.taskId]();
-      delete PRINT_RUNNER_DONE[data.taskId];
-      MAIN_WINDOW.webContents.send("printTask", PRINT_RUNNER.isBusy());
       return;
     }
     let deviceName = havePrinter ? data.printer : defaultPrinter;
@@ -120,6 +119,9 @@ function initPrintEvent() {
           fs.writeFileSync(pdfPath, pdfData);
           printPdf(pdfPath, deviceName, data)
             .then(() => {
+              PRINT_QUEUE.findJob(data.taskId).then((job)=>{
+                job.setProgress(99, 100)
+              });
               log(
                 `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印成功，打印类型：PDF，打印机：${deviceName}，页数：${data.pageNum}`
               );
@@ -134,6 +136,9 @@ function initPrintEvent() {
               }
             })
             .catch((err) => {
+              PRINT_QUEUE.findJob(data.taskId).then((job)=>{
+                job.setProgress(0, 100)
+              });
               log(
                 `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印失败，打印类型：PDF，打印机：${deviceName}，原因：${err.message}`
               );
@@ -145,11 +150,7 @@ function initPrintEvent() {
                 });
             })
             .finally(() => {
-              // 通过taskMap 调用 task done 回调
-              PRINT_RUNNER_DONE[data.taskId]();
-              // 删除 task
-              delete PRINT_RUNNER_DONE[data.taskId];
-              MAIN_WINDOW.webContents.send("printTask", PRINT_RUNNER.isBusy());
+              
             });
         });
       return;
@@ -159,6 +160,9 @@ function initPrintEvent() {
     if (isUrlPdf) {
       printPdf(data.pdf_path, deviceName, data)
         .then(() => {
+          PRINT_QUEUE.findJob(data.taskId).then((job)=>{
+            job.setProgress(99, 100)
+          });
           log(
             `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印成功，打印类型：URL_PDF，打印机：${deviceName}，页数：${data.pageNum}`
           );
@@ -173,6 +177,9 @@ function initPrintEvent() {
           }
         })
         .catch((err) => {
+          PRINT_QUEUE.findJob(data.taskId).then((job)=>{
+            job.setProgress(0, 100)
+          });
           log(
             `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印失败，打印类型：URL_PDF，打印机：${deviceName}，原因：${err.message}`
           );
@@ -184,11 +191,7 @@ function initPrintEvent() {
             });
         })
         .finally(() => {
-          // 通过 taskMap 调用 task done 回调
-          PRINT_RUNNER_DONE[data.taskId]();
-          // 删除 task
-          delete PRINT_RUNNER_DONE[data.taskId];
-          MAIN_WINDOW.webContents.send("printTask", PRINT_RUNNER.isBusy());
+         
         });
       return;
     }
@@ -229,6 +232,7 @@ function initPrintEvent() {
             socket.emit("successs", result); // 兼容 vue-plugin-hiprint 0.0.56 之前包
             socket.emit("success", result);
           } else {
+            
             log(
               `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印失败，打印类型 HTML，打印机：${deviceName}，原因：${failureReason}`
             );
@@ -239,11 +243,9 @@ function initPrintEvent() {
             });
           }
         }
-        // 通过 taskMap 调用 task done 回调
-        PRINT_RUNNER_DONE[data.taskId]();
-        // 删除 task
-        delete PRINT_RUNNER_DONE[data.taskId];
-        MAIN_WINDOW.webContents.send("printTask", PRINT_RUNNER.isBusy());
+        PRINT_QUEUE.findJob(data.taskId).then((job)=>{
+          job.setProgress(success ? 99 : 0, 100)
+        });
       }
     );
   });

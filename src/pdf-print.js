@@ -34,13 +34,18 @@ const realPrint = (pdfPath, printer, data, resolve, reject) => {
     // pdf打印文档：https://www.sumatrapdfreader.org/docs/Command-line-arguments
     // pdf-to-printer 源码: https://github.com/artiebits/pdf-to-printer
     let pdfOptions = Object.assign(data, { pageSize: data.paperName });
-    printPdfFunction(pdfPath, pdfOptions).then(console.log);
+    printPdfFunction(pdfPath, pdfOptions).then(()=>{
+        resolve();
+    }).catch((err)=>{
+        reject(err);
+    });
   } else {
     // 参数见 lp 命令 使用方法
     let options = [];
     printPdfFunction(pdfPath, printer, options).then(console.log);
+    resolve();
   }
-  resolve();
+  
 };
 
 const printPdf = (pdfPath, printer, data) => {

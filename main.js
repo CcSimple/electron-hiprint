@@ -27,7 +27,8 @@ const {
   initClientEvent,
 } = require("./tools/utils");
 const { machineIdSync } = require("node-machine-id");
-const TaskRunner = require("concurrent-tasks");
+const EmbeddedQueue = require("embedded-queue");
+const sleep = require('util').promisify(setTimeout);
 
 // 主进程
 global.MAIN_WINDOW = null;
@@ -42,9 +43,7 @@ global.SOCKET_SERVER = null;
 // socket.io-client 客户端
 global.SOCKET_CLIENT = null;
 // 打印队列，解决打印并发崩溃问题
-global.PRINT_RUNNER = new TaskRunner({ concurrency: 1 });
-// 打印队列 done 集合
-global.PRINT_RUNNER_DONE = {};
+global.PRINT_QUEUE = null;
 // 分批打印任务的打印任务信息
 global.PRINT_FRAGMENTS_MAPPING = {
   // [id: string]: { // 当前打印任务id，当此任务完成或超过指定时间会删除该对象
@@ -77,6 +76,36 @@ const ioServer = (global.SOCKET_SERVER = new require("socket.io")(server, {
     credentials: false,
   },
 }));
+
+
+// 队列
+EmbeddedQueue.Queue.createQueue({ inMemoryOnly: true }).then((queue)=>{
+    
+    queue.process(
+        "print",
+        async (job) => {
+            data = job.data;
+            data.taskId = job.id;
+            for (let i = 0; i <= 99; i++){
+                // job.progress 0为失败，1为开始，99为成功
+                job = await PRINT_QUEUE.findJob(job.id);
+                if (i == 0){
+                    PRINT_WINDOW.webContents.send("print-new", job.data);
+                    MAIN_WINDOW.webContents.send("printTask", true);
+                    job.setProgress(1, 100);
+                }
+                if (job.progress == 99 || job.progress == 0){
+                    let waitJobs = await PRINT_QUEUE.listJobs('INACTIVE');
+                    MAIN_WINDOW.webContents.send("printTask", waitJobs.length > 0);
+                    break;
+                }
+                await sleep(2000);
+            }
+        },
+        1 //并发固定1
+    );
+    global.PRINT_QUEUE = queue;
+});
 
 // socket.io 客户端，用于连接中转服务
 const ioClient = require("socket.io-client").io;
