@@ -6,13 +6,11 @@
  * @LastEditors: CcSimple
  * @LastEditTime: 2023-07-14 14:09:19
  */
-const pdfPrint1 = require("pdf-to-printer");
-const pdfPrint2 = require("unix-print");
+const { print: winPrint } = require("win32-pdf-printer");
+const unixPrint = require("unix-print");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
-
-const printPdfFunction = process.platform === "win32" ? pdfPrint1.print : pdfPrint2.print;
 
 const randomStr = () => {
   return Math.random()
@@ -30,11 +28,10 @@ const realPrint = (pdfPath, printer, data, resolve, reject) => {
     data = Object.assign({}, data);
     data.printer = printer;
     console.log("print pdf:", pdfPath, JSON.stringify(data));
-    // 参数见 node_modules/pdf-to-printer/dist/print/print.d.ts
+    // 参数及源码：https://github.com/mlmdflr/win32-pdf-printer/blob/main/src/print/print.ts
     // pdf打印文档：https://www.sumatrapdfreader.org/docs/Command-line-arguments
-    // pdf-to-printer 源码: https://github.com/artiebits/pdf-to-printer
     let pdfOptions = Object.assign(data, { pageSize: data.paperName });
-    printPdfFunction(pdfPath, pdfOptions).then(()=>{
+    winPrint.print(pdfPath, pdfOptions).then(()=>{
         resolve();
     }).catch((err)=>{
         reject(err);
@@ -42,10 +39,12 @@ const realPrint = (pdfPath, printer, data, resolve, reject) => {
   } else {
     // 参数见 lp 命令 使用方法
     let options = [];
-    printPdfFunction(pdfPath, printer, options).then(console.log);
-    resolve();
+    unixPrint.print(pdfPath, printer, options).then(()=>{
+        resolve();
+    }).catch((err)=>{
+        reject(err);
+    });
   }
-  
 };
 
 const printPdf = (pdfPath, printer, data) => {

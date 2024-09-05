@@ -56,6 +56,31 @@ global.PRINT_FRAGMENTS_MAPPING = {
   // }
 };
 
+// 队列
+EmbeddedQueue.Queue.createQueue({ inMemoryOnly: true }).then((queue)=>{
+    queue.process(
+        "print",
+        async (job) => {
+            data = job.data;
+            data.taskId = job.id;
+            PRINT_WINDOW.webContents.send("print-new", job.data);
+            MAIN_WINDOW.webContents.send("printTask", true);
+            job.setProgress(1, 100); // job.progress 0为失败，1为开始，99为成功
+            for (let i =0; i<=999; i++){ // 起到防止意外超时的作用，不需要此功能可改while(true)
+                await sleep(1000);
+                job = await PRINT_QUEUE.findJob(job.id);
+                if (job.progress == 99 || job.progress == 0){
+                    let pendingJobs = await PRINT_QUEUE.listJobs('INACTIVE');
+                    MAIN_WINDOW.webContents.send("printTask", pendingJobs.length > 0);
+                    break;
+                }
+            }
+        },
+        1 // 并发，固定值1
+    );
+    global.PRINT_QUEUE = queue;
+});
+
 // socket.io 服务端，用于创建本地服务
 const ioServer = (global.SOCKET_SERVER = new require("socket.io")(server, {
   pingInterval: 10000,
@@ -76,36 +101,6 @@ const ioServer = (global.SOCKET_SERVER = new require("socket.io")(server, {
     credentials: false,
   },
 }));
-
-
-// 队列
-EmbeddedQueue.Queue.createQueue({ inMemoryOnly: true }).then((queue)=>{
-    
-    queue.process(
-        "print",
-        async (job) => {
-            data = job.data;
-            data.taskId = job.id;
-            for (let i = 0; i <= 99; i++){
-                // job.progress 0为失败，1为开始，99为成功
-                job = await PRINT_QUEUE.findJob(job.id);
-                if (i == 0){
-                    PRINT_WINDOW.webContents.send("print-new", job.data);
-                    MAIN_WINDOW.webContents.send("printTask", true);
-                    job.setProgress(1, 100);
-                }
-                if (job.progress == 99 || job.progress == 0){
-                    let waitJobs = await PRINT_QUEUE.listJobs('INACTIVE');
-                    MAIN_WINDOW.webContents.send("printTask", waitJobs.length > 0);
-                    break;
-                }
-                await sleep(2000);
-            }
-        },
-        1 //并发固定1
-    );
-    global.PRINT_QUEUE = queue;
-});
 
 // socket.io 客户端，用于连接中转服务
 const ioClient = require("socket.io-client").io;
