@@ -8,7 +8,9 @@ const { app } = require("electron");
 const { access, appendFile, constants, writeFile } = require("node:fs");
 const dayjs = require("dayjs");
 
-const logs = app.getPath('logs')
+const { store } = require("../tools/utils");
+
+const logs = store.get("logPath") || app.getPath("logs");
 
 /**
  * This function checks if a log file exists. If it does not exist, a new log file will be created.
@@ -44,7 +46,7 @@ function log(message) {
     checkLogFile()
       .then(() => {
         const logMessage = `${dayjs().format(
-          "YYYY/MM/DD HH:mm:ss"
+          "YYYY/MM/DD HH:mm:ss",
         )}: ${message}\n`;
         appendFile(filePath, logMessage, (err) => {
           if (err) {

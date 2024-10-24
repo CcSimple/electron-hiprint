@@ -1,8 +1,11 @@
+const os = require("os");
+const { app, Notification } = require("electron");
 const address = require("address");
 const ipp = require("ipp");
 const { machineIdSync } = require("node-machine-id");
 const Store = require("electron-store");
 const { getPaperSizeInfo, getPaperSizeInfoAll } = require("win32-pdf-printer");
+const { v7: uuidv7 } = require("uuid");
 const log = require("./log");
 
 Store.initRenderer();
@@ -52,13 +55,19 @@ const schema = {
   },
   pluginVersion: {
     type: "string",
-    default: "",
-  }
+    default: "0.0.58-fix",
+  },
+  logPath: {
+    type: "string",
+    default: app.getPath("logs"),
+  },
+  pdfPath: {
+    type: "string",
+    default: app.getPath("temp"),
+  },
 };
 
 const store = new Store({ schema });
-
-const { app, Notification } = require("electron");
 
 /**
  * @description: 获取当前系统 IP 地址
@@ -122,7 +131,9 @@ const _address = {
 /**
  * @description: 检查分片任务实例，用于自动删除超时分片信息
  */
-const watchTaskInstance = generateWatchTask(() => global.PRINT_FRAGMENTS_MAPPING)();
+const watchTaskInstance = generateWatchTask(
+  () => global.PRINT_FRAGMENTS_MAPPING,
+)();
 
 /**
  * @description: 抛出当前客户端信息，提供更多有价值的信息，逐步替换原有 address
@@ -132,6 +143,7 @@ const watchTaskInstance = generateWatchTask(() => global.PRINT_FRAGMENTS_MAPPING
 function emitClientInfo(socket) {
   _address.mac().then((mac) => {
     socket.emit("clientInfo", {
+      hostname: os.hostname(), // 主机名
       version: app.getVersion(), // 版本号
       platform: process.platform, // 平台
       arch: process.arch, // 系统架构
@@ -160,10 +172,13 @@ function generateWatchTask(getCheckTarget) {
    */
   return function generateWatchTaskInstance(config = {}) {
     // 合并用户和默认配置
-    const realConfig = Object.assign({
-      checkInterval: 5, // 默认检查间隔
-      expire: 10,  // 默认过期时间
-    }, config);
+    const realConfig = Object.assign(
+      {
+        checkInterval: 5, // 默认检查间隔
+        expire: 10, // 默认过期时间
+      },
+      config,
+    );
     return {
       startWatch() {
         if (isWatching) return;
@@ -171,18 +186,21 @@ function generateWatchTask(getCheckTarget) {
       },
       createWatchTimeout() {
         // 更新开关状态
-        isWatching = true
-        return setTimeout(this.clearFragmentsWhichIsExpired.bind(this), realConfig.checkInterval * 60 * 1000);
+        isWatching = true;
+        return setTimeout(
+          this.clearFragmentsWhichIsExpired.bind(this),
+          realConfig.checkInterval * 60 * 1000,
+        );
       },
       clearFragmentsWhichIsExpired() {
         const checkTarget = getCheckTarget();
         const currentTimeStamp = Date.now();
         Object.entries(checkTarget).map(([id, fragmentInfo]) => {
           // 获取任务最后更新时间
-          const { updateTime } = fragmentInfo
+          const { updateTime } = fragmentInfo;
           // 任务过期时，清除任务信息释放内存
-          if ((currentTimeStamp - updateTime) > realConfig.expire * 60 * 1000) {
-            delete checkTarget[id]
+          if (currentTimeStamp - updateTime > realConfig.expire * 60 * 1000) {
+            delete checkTarget[id];
           }
         });
         // 获取剩余任务数量
@@ -191,9 +209,9 @@ function generateWatchTask(getCheckTarget) {
         if (printTaskCount) this.createWatchTimeout();
         // 更新开关状态
         else isWatching = false;
-      }
-    }
-  }
+      },
+    };
+  };
 }
 
 /**
@@ -211,11 +229,13 @@ function initServeEvent(server) {
   server.use((socket, next) => {
     const token = store.get("token");
     if (token && token !== socket.handshake.auth.token) {
-      log(`==> 插件端 Authentication error: ${socket.id}, token: ${socket.handshake.auth.token}`);
+      log(
+        `==> 插件端 Authentication error: ${socket.id}, token: ${socket.handshake.auth.token}`,
+      );
       const err = new Error("Authentication error");
       err.data = {
-        content: "Token 错误"
-      }
+        content: "Token 错误",
+      };
       next(err);
     } else {
       next();
@@ -231,7 +251,7 @@ function initServeEvent(server) {
     // 通知渲染进程已连接
     MAIN_WINDOW.webContents.send(
       "serverConnection",
-      server.engine.clientsCount
+      server.engine.clientsCount,
     );
 
     // 判断是否允许通知
@@ -246,7 +266,7 @@ function initServeEvent(server) {
     }
 
     // 向 client 发送打印机列表
-    socket.emit("printerList", MAIN_WINDOW.webContents.getPrinters());
+    socket.emit("printerList", MAIN_WINDOW.webContents.getPrintersAsync());
 
     // 向 client 发送客户端信息
     emitClientInfo(socket);
@@ -292,7 +312,7 @@ function initServeEvent(server) {
      */
     socket.on("refreshPrinterList", () => {
       log(`插件端 ${socket.id}: refreshPrinterList`);
-      socket.emit("printerList", MAIN_WINDOW.webContents.getPrinters());
+      socket.emit("printerList", MAIN_WINDOW.webContents.getPrintersAsync());
     });
 
     /**
@@ -322,7 +342,7 @@ function initServeEvent(server) {
               "requesting-user-name": "hiPrint",
             },
           },
-          message
+          message,
         );
         // data 必须是 Buffer 类型
         if (msg.data && !Buffer.isBuffer(msg.data)) {
@@ -341,7 +361,7 @@ function initServeEvent(server) {
           socket.emit(
             "ippPrinterCallback",
             err ? { type: err.name, msg: err.message } : null,
-            res
+            res,
           );
         });
       } catch (error) {
@@ -365,7 +385,7 @@ function initServeEvent(server) {
           socket.emit(
             "ippRequestCallback",
             err ? { type: err.name, msg: err.message } : null,
-            res
+            res,
           );
         });
       } catch (error) {
@@ -384,7 +404,7 @@ function initServeEvent(server) {
       if (data) {
         PRINT_RUNNER.add((done) => {
           data.socketId = socket.id;
-          data.taskId = new Date().getTime();
+          data.taskId = uuidv7();
           data.clientType = "local";
           PRINT_WINDOW.webContents.send("print-new", data);
           MAIN_WINDOW.webContents.send("printTask", true);
@@ -396,11 +416,17 @@ function initServeEvent(server) {
     /**
      * @description: client 分批打印任务
      */
-    socket.on('printByFragments', (data) => {
+    socket.on("printByFragments", (data) => {
       if (data) {
-        const { total, index, htmlFragment, id, } = data
-        const currentInfo = PRINT_FRAGMENTS_MAPPING[id]
-          || (PRINT_FRAGMENTS_MAPPING[id] = { total, fragments: [], count: 0, updateTime: 0, })
+        const { total, index, htmlFragment, id } = data;
+        const currentInfo =
+          PRINT_FRAGMENTS_MAPPING[id] ||
+          (PRINT_FRAGMENTS_MAPPING[id] = {
+            total,
+            fragments: [],
+            count: 0,
+            updateTime: 0,
+          });
         // 添加片段信息
         currentInfo.fragments[index] = htmlFragment;
         // 计数
@@ -410,13 +436,13 @@ function initServeEvent(server) {
         // 全部片段已传输完毕
         if (currentInfo.count === currentInfo.total) {
           // 清除全局缓存
-          delete PRINT_FRAGMENTS_MAPPING[id]
+          delete PRINT_FRAGMENTS_MAPPING[id];
           // 合并全部打印片段信息
-          data.html = currentInfo.fragments.join('')
+          data.html = currentInfo.fragments.join("");
           // 添加打印任务
           PRINT_RUNNER.add((done) => {
             data.socketId = socket.id;
-            data.taskId = new Date().getTime();
+            data.taskId = uuidv7();
             data.clientType = "local";
             PRINT_WINDOW.webContents.send("print-new", data);
             MAIN_WINDOW.webContents.send("printTask", true);
@@ -428,6 +454,42 @@ function initServeEvent(server) {
       }
     });
 
+    socket.on("render-print", (data) => {
+      if (data) {
+        RENDER_RUNNER.add((done) => {
+          data.socketId = socket.id;
+          data.taskId = uuidv7();
+          data.clientType = "local";
+          RENDER_WINDOW.webContents.send("print", data);
+          RENDER_RUNNER_DONE[data.taskId] = done;
+        });
+      }
+    });
+
+    socket.on("render-jpeg", (data) => {
+      if (data) {
+        RENDER_RUNNER.add((done) => {
+          data.socketId = socket.id;
+          data.taskId = uuidv7();
+          data.clientType = "local";
+          RENDER_WINDOW.webContents.send("png", data);
+          RENDER_RUNNER_DONE[data.taskId] = done;
+        });
+      }
+    });
+
+    socket.on("render-pdf", (data) => {
+      if (data) {
+        RENDER_RUNNER.add((done) => {
+          data.socketId = socket.id;
+          data.taskId = uuidv7();
+          data.clientType = "local";
+          RENDER_WINDOW.webContents.send("pdf", data);
+          RENDER_RUNNER_DONE[data.taskId] = done;
+        });
+      }
+    });
+
     /**
      * @description: client 断开连接
      */
@@ -435,7 +497,7 @@ function initServeEvent(server) {
       log(`==> 插件端 Disconnect: ${socket.id}`);
       MAIN_WINDOW.webContents.send(
         "serverConnection",
-        server.engine.clientsCount
+        server.engine.clientsCount,
       );
     });
   });
@@ -469,7 +531,7 @@ function initClientEvent() {
     }
 
     // 向 中转服务 发送打印机列表
-    client.emit("printerList", MAIN_WINDOW.webContents.getPrinters());
+    client.emit("printerList", MAIN_WINDOW.webContents.getPrintersAsync());
 
     // 向 中转服务 发送客户端信息
     emitClientInfo(client);
@@ -488,7 +550,7 @@ function initClientEvent() {
    */
   client.on("refreshPrinterList", () => {
     log(`中转服务 ${client.id}: refreshPrinterList`);
-    client.emit("printerList", MAIN_WINDOW.webContents.getPrinters());
+    client.emit("printerList", MAIN_WINDOW.webContents.getPrintersAsync());
   });
 
   /**
@@ -506,7 +568,7 @@ function initClientEvent() {
             "requesting-user-name": "hiPrint",
           },
         },
-        message
+        message,
       );
       // data 必须是 Buffer 类型
       if (msg.data && !Buffer.isBuffer(msg.data)) {
@@ -525,7 +587,7 @@ function initClientEvent() {
         client.emit(
           "ippPrinterCallback",
           err ? { type: err.name, msg: err.message, replyId } : { replyId },
-          res
+          res,
         );
       });
     } catch (error) {
@@ -550,7 +612,7 @@ function initClientEvent() {
         client.emit(
           "ippRequestCallback",
           err ? { type: err.name, msg: err.message, replyId } : { replyId },
-          res
+          res,
         );
       });
     } catch (error) {
@@ -570,11 +632,47 @@ function initClientEvent() {
     if (data) {
       PRINT_RUNNER.add((done) => {
         data.socketId = client.id;
-        data.taskId = new Date().getTime();
+        data.taskId = uuidv7();
         data.clientType = "transit";
         PRINT_WINDOW.webContents.send("print-new", data);
         MAIN_WINDOW.webContents.send("printTask", true);
         PRINT_RUNNER_DONE[data.taskId] = done;
+      });
+    }
+  });
+
+  client.on("render-print", (data) => {
+    if (data) {
+      RENDER_RUNNER.add((done) => {
+        data.socketId = client.id;
+        data.taskId = uuidv7();
+        data.clientType = "transit";
+        RENDER_WINDOW.webContents.send("print", data);
+        RENDER_RUNNER_DONE[data.taskId] = done;
+      });
+    }
+  });
+
+  client.on("render-jpeg", (data) => {
+    if (data) {
+      RENDER_RUNNER.add((done) => {
+        data.socketId = client.id;
+        data.taskId = uuidv7();
+        data.clientType = "transit";
+        RENDER_WINDOW.webContents.send("print", data);
+        RENDER_RUNNER_DONE[data.taskId] = done;
+      });
+    }
+  });
+
+  client.on("render-pdf", (data) => {
+    if (data) {
+      RENDER_RUNNER.add((done) => {
+        data.socketId = client.id;
+        data.taskId = uuidv7();
+        data.clientType = "transit";
+        RENDER_WINDOW.webContents.send("print", data);
+        RENDER_RUNNER_DONE[data.taskId] = done;
       });
     }
   });

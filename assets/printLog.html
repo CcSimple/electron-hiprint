@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>打印日志</title>
+    <link rel="stylesheet" href="./element-ui/index.css" />
+    <script src="./js/vue.min.js"></script>
+    <script src="./element-ui/index.js"></script>
+    <script src="./js/dayjs.min.js"></script>
+    <script src="./js/lodash.min.js"></script>
+    <style>
+      .search-container {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+      }
+
+      .el-form-item {
+        display: inline-flex;
+        margin-bottom: 8px;
+      }
+
+      .el-form--label-top .el-form-item__label {
+        padding: 0;
+      }
+
+      .el-date-editor--datetimerange {
+        width: 334px !important;
+      }
+
+      .el-select {
+        width: 160px !important;
+      }
+
+      .table {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .el-table .el-table__cell {
+        padding: 4px 0;
+      }
+
+      .el-table .el-button {
+        padding: 4px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <el-form
+        ref="formRef"
+        :model="searchData"
+        class="search-form"
+        v-bind="searchOptions"
+        items=""
+      >
+        <div class="search-container">
+          <template v-for="item in searchOptions.items">
+            <div class="search-item">
+              <el-form-item
+                v-if="item.display !== false"
+                :key="item.prop"
+                :label="item.label"
+                :prop="item.prop"
+              >
+                <component
+                  v-if="item.optionIs"
+                  :is="item.is"
+                  v-model="searchData[item.prop]"
+                  v-bind="item.attrs"
+                  v-on="item.event"
+                >
+                  <template v-for="option in item.options">
+                    <component :is="item.optionIs" v-bind="option">
+                      {{ option.content || option.label }}
+                    </component>
+                  </template>
+                </component>
+                <component
+                  v-else
+                  :is="item.is"
+                  v-model="searchData[item.prop]"
+                  v-bind="item.attrs"
+                  v-on="item.event"
+                >
+                  {{ item.content }}
+                </component>
+              </el-form-item>
+            </div>
+          </template>
+          <div class="search-btns">
+            <el-button
+              type="primary"
+              :size="searchOptions.size"
+              @click="fetchLogs"
+            >
+              搜索
+            </el-button>
+            <el-button
+              type="danger"
+              :size="searchOptions.size"
+              @click="clearLogs"
+            >
+              清空
+            </el-button>
+          </div>
+        </div>
+      </el-form>
+
+      <el-table
+        v-bind="tableOptions"
+        :data="logs"
+        columns=""
+        event=""
+        v-on="tableOptions.event"
+      >
+        <el-table-column
+          v-for="column in tableOptions.columns"
+          :key="column.prop"
+          v-bind="column"
+        >
+          <template v-if="column.prop === 'action'" #default="{row}">
+            <el-button type="text" @click="handleRePrint(row)">重打</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="pagination">
+        <el-pagination
+          v-model:currentPage="tableOptions.currentPage"
+          v-model:page-size="tableOptions.pageSize"
+          :page-sizes="[20, 50, 100, 200]"
+          :pager-count="5"
+          :total="tableOptions.total"
+          background
+          layout="sizes, prev, pager, next, jumper , -> , total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </div>
+
+    <script>
+      const { ipcRenderer } = require("electron");
+
+      new Vue({
+        el: "#app",
+        data() {
+          return {
+            logs: [],
+            searchOptions: {
+              size: "small",
+              inline: true,
+              spellcheck: false,
+              labelPosition: "right",
+              labelSuffix: "：",
+              items: [
+                {
+                  label: "时间",
+                  prop: "timestamp",
+                  is: "el-date-picker",
+                  attrs: {
+                    type: "datetimerange",
+                    rangeSeparator: "至",
+                    startPlaceholder: "开始日期",
+                    endPlaceholder: "结束日期",
+                    valueFormat: "yyyy-MM-dd HH:mm:ss",
+                  },
+                },
+                {
+                  label: "连接类型",
+                  prop: "clientType",
+                  is: "el-select",
+                  optionIs: "el-option",
+                  attrs: {
+                    placeholder: "请选择连接类型",
+                    clearable: true,
+                  },
+                  options: [
+                    {
+                      label: "本地",
+                      value: "local",
+                    },
+                    {
+                      label: "中转",
+                      value: "transit",
+                    },
+                  ],
+                },
+                {
+                  label: "状态",
+                  prop: "status",
+                  is: "el-select",
+                  optionIs: "el-option",
+                  attrs: {
+                    placeholder: "请选择状态",
+                    clearable: true,
+                  },
+                  options: [
+                    {
+                      label: "成功",
+                      value: "success",
+                    },
+                    {
+                      label: "失败",
+                      value: "failed",
+                    },
+                  ],
+                },
+              ],
+            },
+            searchData: {
+              timestamp: [],
+              clientType: "",
+              status: "",
+            },
+            sort: {
+              prop: undefined,
+              order: undefined
+            },
+            tableOptions: {
+              currentPage: 1,
+              pageSize: 20,
+              total: 0,
+              height: "calc(100vh - 51px - 42px - 16px)",
+              border: true,
+              stripe: true,
+              class: "table",
+              event: {
+                "sort-change": this.sortChange
+              },
+              columns: [
+                {
+                  label: "序号",
+                  prop: "index",
+                  width: "60px",
+                  align: "center",
+                  formatter: (row, column, cellValue, index) => {
+                    return (
+                      (this.tableOptions.currentPage - 1) *
+                        this.tableOptions.pageSize +
+                      index +
+                      1
+                    );
+                  },
+                },
+                {
+                  prop: "timestamp",
+                  label: "时间",
+                  formatter: (row, column, cellValue) => {
+                    return dayjs(cellValue).format("YYYY/MM/DD HH:mm:ss");
+                  },
+                  width: "160px",
+                  align: "center",
+                  sortable: "custom",
+                },
+                {
+                  prop: "clientType",
+                  label: "连接类型",
+                  formatter: (row, column, cellValue) => {
+                    return {
+                      local: "本地",
+                      transit: "中转",
+                    }[cellValue];
+                  },
+                  align: "center",
+                  width: "102px",
+                  sortable: "custom",
+                },
+                {
+                  prop: "printer",
+                  label: "打印机",
+                  align: "center",
+                  width: "120px",
+                },
+                {
+                  prop: "templateId",
+                  label: "模板 ID",
+                  showOverflowTooltip: true,
+                  align: "center",
+                  width: "120px",
+                },
+                {
+                  prop: "pageNum",
+                  label: "页数",
+                  formatter: (row, column, cellValue) => {
+                    return cellValue + "页";
+                  },
+                  align: "center",
+                  width: "80px",
+                },
+                {
+                  prop: "status",
+                  label: "状态",
+                  formatter: (row, column, cellValue) => {
+                    return {
+                      success: "成功",
+                      failed: "失败",
+                    }[cellValue];
+                  },
+                  align: "center",
+                  width: "74px",
+                  sortable: "custom",
+                },
+                {
+                  prop: "errorMessage",
+                  label: "错误信息",
+                },
+                {
+                  prop: "action",
+                  label: "操作",
+                  align: "center",
+                  width: "120px",
+                },
+              ],
+            },
+          };
+        },
+        created() {
+          this.fetchLogs();
+          ipcRenderer.on("print-logs", (event, { rows, total }) => {
+            this.logs = rows;
+            this.tableOptions.total = total;
+          });
+        },
+        methods: {
+          /**
+           * 请求打印日志
+           */
+          fetchLogs() {
+            const condition = [];
+            const params = [];
+            const searchData = _.cloneDeep(this.searchData);
+            if (
+              dayjs(searchData.timestamp?.[0] || null).isValid() &&
+              dayjs(searchData.timestamp?.[1] || null).isValid()
+            ) {
+              condition.push(`timestamp >= ? AND timestamp <= ?`);
+              params.push(searchData.timestamp[0]);
+              params.push(searchData.timestamp[1]);
+            }
+            delete searchData.timestamp;
+            Object.keys(searchData).forEach((key) => {
+              if (searchData[key]) {
+                condition.push(`${key} = ?`);
+                params.push(searchData[key]);
+              }
+            });
+            const page = {
+              currentPage: this.tableOptions.currentPage,
+              pageSize: this.tableOptions.pageSize,
+            };
+            ipcRenderer.send("request-logs", { condition, params, page, sort: this.sort });
+          },
+          sortChange({order, prop}) {
+            this.sort = {
+              prop,
+              order,
+            }
+            this.tableOptions.currentPage = 1;
+            this.fetchLogs();
+          },
+          /**
+           * 处理分页大小变化
+           */
+          handleSizeChange(pageSize) {
+            this.tableOptions.pageSize = pageSize;
+            this.fetchLogs();
+          },
+          /**
+           * 处理分页页码变化
+           */
+          handleCurrentChange(currentPage) {
+            this.tableOptions.currentPage = currentPage;
+            this.fetchLogs();
+          },
+          /**
+           * 清空日志
+           */
+          clearLogs() {
+            this.$confirm("确定要清空日志吗？", "提示", {
+              type: "warning",
+              confirmButtonText: "确定",
+              cancelButtonText: "取消",
+              center: true,
+              showClose: false,
+              closeOnClickModal: false,
+              closeOnPressEscape: false,
+            }).then(() => {
+              ipcRenderer.send("clear-logs");
+              this.logs = [];
+              this.tableOptions.total = 0;
+            });
+          },
+          /**
+           * 处理重打
+           */
+          handleRePrint(row) {
+            ipcRenderer.send("reprint", row);
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

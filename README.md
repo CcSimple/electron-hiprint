@@ -332,7 +332,7 @@ if (globalThis.connect) {
 {
     silent: data.silent ?? true, // 静默打印
     printBackground: data.printBackground ?? true, // 是否打印背景
-    deviceName: deviceName, // 打印机名称
+    printer: printer, // 打印机名称
     color: data.color ?? true, // 是否打印颜色
     margins: data.margins ?? {
       marginType: "none",
