@@ -206,6 +206,23 @@ function initServeEvent(server) {
   if (!server) return false;
 
   /**
+   * @description: 校验 token
+   */
+  server.use((socket, next) => {
+    const token = store.get("token");
+    if (token && token !== socket.handshake.auth.token) {
+      log(`==> 插件端 Authentication error: ${socket.id}, token: ${socket.handshake.auth.token}`);
+      const err = new Error("Authentication error");
+      err.data = {
+        content: "Token 错误"
+      }
+      next(err);
+    } else {
+      next();
+    }
+  });
+
+  /**
    * @description: 新的 web client 连入，绑定 socket 事件
    */
   server.on("connect", (socket) => {
