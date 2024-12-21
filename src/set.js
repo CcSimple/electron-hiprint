@@ -317,13 +317,17 @@ function removeEvent() {
 }
 
 function getDownloadedVersions() {
-  const pluginDir = path.join(app.getAppPath(), "plugin");
+  let pluginDir = path.join(app.getAppPath(), "plugin");
+  if (app.isPackaged) {
+    pluginDir = path.join(app.getAppPath(), "../", "plugin");
+  }
   if (!fs.existsSync(pluginDir)) {
     return [];
   }
-  return fs.readdirSync(pluginDir)
-    .filter(file => file.endsWith(".js")) // 假设插件文件以 .js 结尾
-    .map(file => file.split("_")[0]); // 提取版本号
+  return fs
+    .readdirSync(pluginDir)
+    .filter((file) => file.endsWith(".js")) // 假设插件文件以 .js 结尾
+    .map((file) => file.split("_")[0]); // 提取版本号
 }
 
 module.exports = async () => {
