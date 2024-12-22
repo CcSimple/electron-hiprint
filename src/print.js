@@ -6,6 +6,10 @@ const os = require("os");
 const fs = require("fs");
 const printPdf = require("./pdf-print");
 const log = require("../tools/log");
+const { store } = require("../tools/utils");
+const db = require("../tools/database");
+const dayjs = require("dayjs");
+const { v7: uuidv7 } = require("uuid");
 
 /**
  * @description: 创建打印窗口
@@ -46,7 +50,7 @@ async function createPrintWindow() {
  */
 function initPrintEvent() {
   ipcMain.on("do", (event, data) => {
-    var socket = null;
+    let socket = null;
     if (data.clientType === "local") {
       socket = SOCKET_SERVER.sockets.sockets.get(data.socketId);
     } else {
@@ -80,7 +84,9 @@ function initPrintEvent() {
     });
     if (printerError) {
       log(
-        `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印失败，打印机异常，打印机：${data.printer}`
+        `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
+          data.templateId
+        }】 打印失败，打印机异常，打印机：${data.printer}`,
       );
       socket &&
         socket.emit("error", {
@@ -88,19 +94,48 @@ function initPrintEvent() {
           templateId: data.templateId,
           replyId: data.replyId,
         });
-      // 通过 taskMap 调用 task done 回调
-      PRINT_RUNNER_DONE[data.taskId]();
-      delete PRINT_RUNNER_DONE[data.taskId];
+      if (data.taskId) {
+        // 通过 taskMap 调用 task done 回调
+        PRINT_RUNNER_DONE[data.taskId]();
+        delete PRINT_RUNNER_DONE[data.taskId];
+      }
       MAIN_WINDOW.webContents.send("printTask", PRINT_RUNNER.isBusy());
       return;
     }
     let deviceName = havePrinter ? data.printer : defaultPrinter;
 
+    const logPrintResult = (status, errorMessage = "") => {
+      db.run(
+        `INSERT INTO print_logs (socketId, clientType, printer, templateId, data, pageNum, status, errorMessage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          socket?.id,
+          data.clientType,
+          deviceName,
+          data.templateId,
+          JSON.stringify(data),
+          data.pageNum,
+          status,
+          errorMessage,
+        ],
+        (err) => {
+          if (err) {
+            console.error("Failed to log print result", err);
+          }
+        },
+      );
+    };
+
     // pdf 打印
     let isPdf = data.type && `${data.type}`.toLowerCase() === "pdf";
     if (isPdf) {
-      const pdfPath = path.join(os.tmpdir(), "hiprint", "temp.pdf");
-      fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
+      const pdfPath = path.join(
+        store.get("pdfPath") || os.tmpdir(),
+        "hiprint",
+        dayjs().format(`YYYY_MM_DD HH_mm_ss_`) + `${uuidv7()}.pdf`,
+      );
+      fs.mkdirSync(path.dirname(pdfPath), {
+        recursive: true,
+      });
       PRINT_WINDOW.webContents
         .printToPDF({
           landscape: data.landscape ?? false, // 横向打印
@@ -121,7 +156,11 @@ function initPrintEvent() {
           printPdf(pdfPath, deviceName, data)
             .then(() => {
               log(
-                `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印成功，打印类型：PDF，打印机：${deviceName}，页数：${data.pageNum}`
+                `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
+                  data.templateId
+                }】 打印成功，打印类型：PDF，打印机：${deviceName}，页数：${
+                  data.pageNum
+                }`,
               );
               if (socket) {
                 const result = {
@@ -132,10 +171,15 @@ function initPrintEvent() {
                 socket.emit("successs", result); // 兼容 vue-plugin-hiprint 0.0.56 之前包
                 socket.emit("success", result);
               }
+              logPrintResult("success");
             })
             .catch((err) => {
               log(
-                `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印失败，打印类型：PDF，打印机：${deviceName}，原因：${err.message}`
+                `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
+                  data.templateId
+                }】 打印失败，打印类型：PDF，打印机：${deviceName}，原因：${
+                  err.message
+                }`,
               );
               socket &&
                 socket.emit("error", {
@@ -143,12 +187,15 @@ function initPrintEvent() {
                   templateId: data.templateId,
                   replyId: data.replyId,
                 });
+              logPrintResult("failure", err.message);
             })
             .finally(() => {
-              // 通过taskMap 调用 task done 回调
-              PRINT_RUNNER_DONE[data.taskId]();
-              // 删除 task
-              delete PRINT_RUNNER_DONE[data.taskId];
+              if (data.taskId) {
+                // 通过taskMap 调用 task done 回调
+                PRINT_RUNNER_DONE[data.taskId]();
+                // 删除 task
+                delete PRINT_RUNNER_DONE[data.taskId];
+              }
               MAIN_WINDOW.webContents.send("printTask", PRINT_RUNNER.isBusy());
             });
         });
@@ -160,7 +207,11 @@ function initPrintEvent() {
       printPdf(data.pdf_path, deviceName, data)
         .then(() => {
           log(
-            `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印成功，打印类型：URL_PDF，打印机：${deviceName}，页数：${data.pageNum}`
+            `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
+              data.templateId
+            }】 打印成功，打印类型：URL_PDF，打印机：${deviceName}，页数：${
+              data.pageNum
+            }`,
           );
           if (socket) {
             const result = {
@@ -171,10 +222,15 @@ function initPrintEvent() {
             socket.emit("successs", result); // 兼容 vue-plugin-hiprint 0.0.56 之前包
             socket.emit("success", result);
           }
+          logPrintResult("success");
         })
         .catch((err) => {
           log(
-            `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印失败，打印类型：URL_PDF，打印机：${deviceName}，原因：${err.message}`
+            `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
+              data.templateId
+            }】 打印失败，打印类型：URL_PDF，打印机：${deviceName}，原因：${
+              err.message
+            }`,
           );
           socket &&
             socket.emit("error", {
@@ -182,12 +238,15 @@ function initPrintEvent() {
               templateId: data.templateId,
               replyId: data.replyId,
             });
+          logPrintResult("failure", err.message);
         })
         .finally(() => {
-          // 通过 taskMap 调用 task done 回调
-          PRINT_RUNNER_DONE[data.taskId]();
-          // 删除 task
-          delete PRINT_RUNNER_DONE[data.taskId];
+          if (data.taskId) {
+            // 通过 taskMap 调用 task done 回调
+            PRINT_RUNNER_DONE[data.taskId]();
+            // 删除 task
+            delete PRINT_RUNNER_DONE[data.taskId];
+          }
           MAIN_WINDOW.webContents.send("printTask", PRINT_RUNNER.isBusy());
         });
       return;
@@ -216,11 +275,25 @@ function initPrintEvent() {
         pageSize: data.pageSize, // 打印纸张
       },
       (success, failureReason) => {
+        if (success) {
+          log(
+            `${data.replyId ? "中转服务" : "插件端"} ${socket?.id} 模板 【${
+              data.templateId
+            }】 打印成功，打印类型 HTML，打印机：${deviceName}，页数：${
+              data.pageNum
+            }`,
+          );
+          logPrintResult("success");
+        } else {
+          log(
+            `${data.replyId ? "中转服务" : "插件端"} ${socket?.id} 模板 【${
+              data.templateId
+            }】 打印失败，打印类型 HTML，打印机：${deviceName}，原因：${failureReason}`,
+          );
+          logPrintResult("failure", failureReason);
+        }
         if (socket) {
           if (success) {
-            log(
-              `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印成功，打印类型 HTML，打印机：${deviceName}，页数：${data.pageNum}`
-            );
             const result = {
               msg: "打印成功",
               templateId: data.templateId,
@@ -229,9 +302,6 @@ function initPrintEvent() {
             socket.emit("successs", result); // 兼容 vue-plugin-hiprint 0.0.56 之前包
             socket.emit("success", result);
           } else {
-            log(
-              `${data.replyId?'中转服务':'插件端'} ${socket.id} 模板 【${data.templateId}】 打印失败，打印类型 HTML，打印机：${deviceName}，原因：${failureReason}`
-            );
             socket.emit("error", {
               msg: failureReason,
               templateId: data.templateId,
@@ -240,11 +310,13 @@ function initPrintEvent() {
           }
         }
         // 通过 taskMap 调用 task done 回调
-        PRINT_RUNNER_DONE[data.taskId]();
-        // 删除 task
-        delete PRINT_RUNNER_DONE[data.taskId];
+        if (data.taskId) {
+          PRINT_RUNNER_DONE[data.taskId]();
+          // 删除 task
+          delete PRINT_RUNNER_DONE[data.taskId];
+        }
         MAIN_WINDOW.webContents.send("printTask", PRINT_RUNNER.isBusy());
-      }
+      },
     );
   });
 }

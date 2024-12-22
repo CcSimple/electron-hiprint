@@ -54,12 +54,12 @@
             打印状态：<span>{{ printing ? "文档打印中" : "空闲" }}</span>
           </div>
           <div class="message row">设备编号：<span @click="handleCopy">{{ deviceId }}</span></div>
-          <!-- <div class="message">
+          <div class="message">
             插件版本：{{ pluginVersion }}
           </div>
           <div class="message">
-            客户端版本：{{ process.env.npm_package_version }}
-          </div> -->
+            客户端版本：{{ version }}
+          </div>
         </div>
       </div>
     </div>
@@ -67,6 +67,8 @@
       const { ipcRenderer, clipboard } = require("electron");
       const Store = require("electron-store");
       const store = new Store();
+
+      const { version } = require("../package.json");
 
       document.title = store.get("mainTitle") || "Electron-hiprint";
 
@@ -81,8 +83,8 @@
             transitActiveFlag: false,
             socketActiveNum: 0,
             printing: false,
-            version: "1.0.10",
             pluginVersion: store.get("pluginVersion") || "未指定",
+            version
           };
         },
         created() {

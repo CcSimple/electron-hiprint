@@ -1,7 +1,7 @@
 <!--
  * @Date: 2023-10-05 18:00:07
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-03-17 11:33:22
+ * @LastEditTime: 2024-12-15 02:48:55
  * @FilePath: /electron-hiprint/assets/print.html
 -->
 <!DOCTYPE html>
@@ -59,13 +59,20 @@
   <body>
     <div id="printElement"></div>
     <script>
-      const { ipcRenderer, BrowserWindow } = require("electron");
+      const { ipcRenderer } = require("electron");
 
       $(document).ready(function() {
         ipcRenderer.on("print-new", (event, data) => {
           document.title = data.title ? data.title : "hiprint打印";
           document.getElementById("printElement").innerHTML = data.html;
           data.pageNum = $(".hiprint-printPaper").length;
+          $.fn.onImgLoaded(() => {
+            ipcRenderer.send("do", data);
+          });
+        });
+        ipcRenderer.on("reprint", (event, data) => {
+          document.title = data.title ? data.title : "hiprint打印";
+          document.getElementById("printElement").innerHTML = data.html;
           $.fn.onImgLoaded(() => {
             ipcRenderer.send("do", data);
           });

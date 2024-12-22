@@ -18,3 +18,4 @@ package-lock.json
 run/
 out/
 .history/
+tools/database.sqlite

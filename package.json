@@ -7,8 +7,7 @@
   "license": "MIT",
   "homepage": "https://gitee.com/CcSimple",
   "scripts": {
-    "start": "chcp 65001 & electron .",
-    "startmac": "electron .",
+    "start": "node start.js",
     "build-w": "electron-builder -w nsis:ia32 && node ./tools/rename --tag win_x32",
     "build-w-64": "electron-builder -w nsis:x64 && node ./tools/rename --tag win_x64",
     "build-m": "electron-builder -m --x64 && node ./tools/rename --tag mac_x64",
@@ -31,6 +30,9 @@
     "asar": true,
     "files": [
       "**/*"
+    ],
+    "extraResources": [
+      "plugin/*"
     ],
     "electronDownload": {
       "mirror": "https://npmmirror.com/mirrors/electron/"
@@ -89,16 +91,19 @@
     "dayjs": "^1.11.10",
     "electron-store": "^8.1.0",
     "ipp": "^2.0.1",
+    "jimp": "^1.6.0",
     "jquery": "^3.6.0",
     "node-machine-id": "^1.1.12",
     "pdf-to-printer": "^5.6.0",
     "socket.io": "^3.1.0",
     "socket.io-client": "^3.1.0",
+    "sqlite3": "5.1.6",
     "unix-print": "^1.2.0",
+    "uuid": "^11.0.3",
     "win32-pdf-printer": "^4.0.1"
   },
   "devDependencies": {
-    "electron": "^15.0.0",
+    "electron": "^17.0.0",
     "electron-builder": "23.0.6",
     "fs-extra": "^9.1.0",
     "prettier": "^1.16.4",

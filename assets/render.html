@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      ::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+    <title>打印窗口</title>
+  </head>
+
+  <body>
+    <div id="printElement"></div>
+    <script>
+      const { ipcRenderer } = require("electron");
+      const Store = require("electron-store");
+
+      const store = new Store();
+
+      window.$ = window.jQuery = require("jquery");
+      window.autoConnect = false;
+
+      window.template = undefined;
+
+      window.io = () => {};
+
+      // 用于判断是否为打包版本
+      const isPackaged = location.href.includes("app.asar");
+      // 用于判断当前系统
+      const platform = process.platform;
+
+      $(document).ready(function() {
+        const script = document.createElement("script");
+        script.setAttribute("type", "text/javascript");
+
+        // 加载插件
+        let scriptSrc = `../plugin/${store.get(
+          "pluginVersion",
+        )}_vue-plugin-hiprint.js`;
+
+        // mac 打包版本路径特殊处理
+        if (isPackaged) {
+          scriptSrc = `../../plugin/${store.get(
+            "pluginVersion",
+          )}_vue-plugin-hiprint.js`;
+        }
+
+        script.setAttribute("src", scriptSrc);
+        script.onload = () => {
+          hiprint = window["vue-plugin-hiprint"].hiprint;
+
+          ipcRenderer.on("png", (event, data) => {
+            // 滚动窗口滚动条到左上角
+            window.scrollTo(0, 0);
+            window.template = new hiprint.PrintTemplate({
+              template: data.template,
+            });
+            $("#printElement").html(window.template.getHtml(data.data));
+            const rects = Array.from(
+              $("#printElement").find(".hiprint-printPaper"),
+            ).map((el) => el.getBoundingClientRect());
+            const capturePageData = {
+              ...data,
+              templateId: template.id,
+              x: rects[0].x,
+              y: rects[0].y,
+              width: rects[0].width,
+              height: rects.pop().bottom,
+            };
+            setTimeout(() => {
+              ipcRenderer.send("capturePage", capturePageData);
+            });
+          });
+
+          ipcRenderer.on("pdf", (event, data) => {
+            window.template = new hiprint.PrintTemplate({
+              template: data.template,
+            });
+            $("#printElement").html(window.template.getHtml(data.data));
+            setTimeout(() => {
+              ipcRenderer.send("printToPDF", {
+                ...data,
+                templateId: template.id,
+              });
+            });
+          });
+
+          ipcRenderer.on("print", (event, data) => {
+            window.template = new hiprint.PrintTemplate({
+              template: data.template,
+            });
+            $("#printElement").html(window.template.getHtml(data.data));
+            setTimeout(() => {
+              ipcRenderer.send("print", {
+                ...data,
+                templateId: template.id,
+              });
+            });
+          });
+        };
+        script.onerror = () => {
+          ipcRenderer.send("showMessageBox", {
+            title: "插件加载错误",
+            message: `无法从插件缓存中加载【${store.get(
+              "pluginVersion",
+            )}】版本，请重新在设置中指定版本！`,
+            type: "error",
+            buttons: ["我知道了"],
+          });
+        };
+
+        const head = document.querySelector("head");
+
+        let cssSrc = `../plugin/${store.get(
+          "pluginVersion",
+        )}_print-lock.css`;
+
+        // mac 打包版本路径特殊处理
+        if (isPackaged) {
+          cssSrc = `../../plugin/${store.get(
+            "pluginVersion",
+          )}_print-lock.css`;
+        }
+
+        head.append(
+          $(
+            `<link rel="stylesheet" type="text/css" media="print" href="${cssSrc}">`,
+          )[0],
+        );
+        head.append(script);
+      });
+    </script>
+  </body>
+</html>

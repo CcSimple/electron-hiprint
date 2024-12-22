@@ -1,8 +1,8 @@
 /*
  * @Date: 2024-01-25 15:52:14
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-04-05 09:41:20
- * @FilePath: \electron-hiprint\main.js
+ * @LastEditTime: 2024-12-15 01:30:48
+ * @FilePath: /electron-hiprint/main.js
  */
 const {
   app,
@@ -12,13 +12,15 @@ const {
   Notification,
   Tray,
   Menu,
-  shell
+  shell,
 } = require("electron");
 const path = require("path");
 const server = require("http").createServer();
 const helper = require("./src/helper");
 const printSetup = require("./src/print");
+const renderSetup = require("./src/render");
 const setSetup = require("./src/set");
+const printLogSetup = require("./src/printLog");
 const log = require("./tools/log");
 const {
   store,
@@ -37,6 +39,10 @@ global.APP_TRAY = null;
 global.PRINT_WINDOW = null;
 // 设置窗口
 global.SET_WINDOW = null;
+// 渲染窗口
+global.RENDER_WINDOW = null;
+// 打印日志窗口
+global.PRINT_LOG_WINDOW = null;
 // socket.io 服务端
 global.SOCKET_SERVER = null;
 // socket.io-client 客户端
@@ -56,6 +62,8 @@ global.PRINT_FRAGMENTS_MAPPING = {
   //   }
   // }
 };
+global.RENDER_RUNNER = new TaskRunner({ concurrency: 1 });
+global.RENDER_RUNNER_DONE = {};
 
 // socket.io 服务端，用于创建本地服务
 const ioServer = (global.SOCKET_SERVER = new require("socket.io")(server, {
@@ -91,6 +99,8 @@ async function initialize() {
     // 销毁所有窗口、托盘、退出应用
     helper.appQuit();
   }
+
+  app.setAppLogsPath(store.get("logPath"));
 
   // 当运行第二个实例时,聚焦到 MAIN_WINDOW 这个窗口
   app.on("second-instance", () => {
@@ -137,7 +147,7 @@ async function initialize() {
         createWindow();
       }
     });
-    log("==> Electron-hiprint 启动 <==")
+    log("==> Electron-hiprint 启动 <==");
   });
 }
 
@@ -184,11 +194,6 @@ async function createWindow() {
   const indexHtml = path.join("file://", app.getAppPath(), "assets/index.html");
   MAIN_WINDOW.webContents.loadURL(indexHtml);
 
-  // 未打包时打开开发者工具
-  if (!app.isPackaged) {
-    MAIN_WINDOW.webContents.openDevTools();
-  }
-
   // 退出
   MAIN_WINDOW.on("closed", () => {
     MAIN_WINDOW = null;
@@ -215,6 +220,10 @@ async function createWindow() {
   // 主窗口 Dom 加载完毕
   MAIN_WINDOW.webContents.on("dom-ready", async () => {
     try {
+      // 未打包时打开开发者工具
+      if (!app.isPackaged) {
+        MAIN_WINDOW.webContents.openDevTools();
+      }
       // 本地服务开启端口监听
       server.listen(store.get("port") || 17521);
       // 初始化本地 服务端事件
@@ -247,6 +256,8 @@ async function createWindow() {
   initTray();
   // 打印窗口初始化
   await printSetup();
+  // 渲染窗口初始化
+  await renderSetup();
 
   return MAIN_WINDOW;
 }
@@ -266,7 +277,11 @@ function loadingView(windowOptions) {
     height: windowOptions.height,
   });
 
-  const loadingHtml = path.join("file://", app.getAppPath(), "assets/loading.html");
+  const loadingHtml = path.join(
+    "file://",
+    app.getAppPath(),
+    "assets/loading.html",
+  );
   loadingBrowserView.webContents.loadURL(loadingHtml);
 
   // 主窗口 dom 加载完毕，移除 loadingBrowserView
@@ -301,18 +316,24 @@ function initTray() {
     {
       label: "设置",
       click: () => {
-        if (!SET_WINDOW) {
-          setSetup();
-        } else {
-          SET_WINDOW.show();
-        }
+        openSetWindow();
       },
     },
     {
-      label: "查看日志",
+      label: "打印记录",
       click: () => {
         shell.openPath(app.getPath("logs"));
-      }
+      },
+    },
+    {
+      label: "软件日志",
+      click: () => {
+        if (!PRINT_LOG_WINDOW) {
+          printLogSetup();
+        } else {
+          PRINT_LOG_WINDOW.show();
+        }
+      },
     },
     {
       label: "退出",

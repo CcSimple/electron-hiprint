@@ -1,8 +1,8 @@
 <!--
  * @Date: 2023-09-05 13:56:58
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-04-05 13:04:55
- * @FilePath: \electron-hiprint\assets\set.html
+ * @LastEditTime: 2024-12-14 21:50:41
+ * @FilePath: /electron-hiprint/assets/set.html
 -->
 <!DOCTYPE html>
 <html>
@@ -28,6 +28,7 @@
       }
 
       .el-form-item {
+        width: 100%;
         margin-bottom: 8px;
       }
 
@@ -52,138 +53,86 @@
         display: none; /* Chrome, Safari 和 Opera */
       }
     </style>
-    <title>设置</title>
   </head>
 
   <body class="hide-scrollbar">
     <div id="app">
+      <el-tabs v-model="setTab" @tab-click="handleTabChange">
+        <template v-for="tab in tabs">
+          <el-tab-pane :key="tab.name" :label="tab.label" :name="tab.name" />
+        </template>
+      </el-tabs>
       <el-form
         ref="formRef"
         :model="formData"
-        label-position="top"
         :rules="rules"
+        v-bind="formOptions"
+        items=""
       >
-        <!-- 端口设置 -->
-        <el-form-item label="端口设置" prop="port">
-          <el-input-number
-            v-model="formData.port"
-            size="small"
-            min="10000"
-            max="65535"
-            :controls="false"
-            placeholder="请输入10000-65535之间的端口号(17521)"
-          ></el-input-number>
-        </el-form-item>
-        <!-- TOKEN 设置 -->
-        <el-form-item label="TOKEN 设置" prop="token">
-          <el-input
-            v-model="formData.token"
-            size="small"
-            minlength="5"
-            maxlength="32"
-            placeholder="请输入5-32个字符作为TOKEN"
-          ></el-input>
-        </el-form-item>
-        <!-- 插件版本 设置 -->
-        <!-- <el-form-item label="插件版本设置" prop="pluginVersion">
-          <el-select
-            v-model="formData.pluginVersion"
-            filterable
-            size="small"
-            @change="onChange({prop: pluginVersion, value: $event})"
-          >
-            <template v-for="option in versions">
-              <el-option
-                :key="option.version"
-                :label="option.version"
-                :value="option.version"
-              >
-                <span>{{ option.version }}</span>
-                <span style="float: right;color: #8492a6;"
-                  >{{ option.updateTime }}</span
-                >
-              </el-option>
-            </template>
-          </el-select>
-        </el-form-item> -->
-        <!-- 开机启动设置 -->
         <el-row :gutter="12">
-          <el-col :span="16">
-            <el-form-item label="开机启动" prop="openAtLogin">
-              <el-switch v-model="formData.openAtLogin"></el-switch>
-              <span>(请注意杀毒软件拦截)</span>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="自启后最小化" prop="openAsHidden">
-              <el-switch v-model="formData.openAsHidden"></el-switch>
+          <template v-for="item in formOptions.items">
+            <el-col :span="item.span || formOptions.span">
+              <el-form-item
+                v-if="item.display !== false"
+                :key="item.prop"
+                :label="item.label"
+                :prop="item.prop"
+                :style="item.style"
+              >
+                <component
+                  v-if="item.optionIs"
+                  :is="item.is"
+                  v-model="formData[item.prop]"
+                  v-bind="item.attrs"
+                  v-on="item.event"
+                >
+                  <template v-for="option in item.options">
+                    <template v-if="item.optionRender">
+                      <component
+                        :is="item.optionIs"
+                        v-bind="option"
+                        :key="option.value"
+                      >
+                        <render-component
+                          :render="item.optionRender"
+                          :data="option"
+                        />
+                      </component>
+                    </template>
+                    <component v-else :is="item.optionIs" v-bind="option">
+                      {{ option.content || option.value }}
+                    </component>
+                  </template>
+                </component>
+                <component
+                  v-else
+                  :is="item.is"
+                  v-model="formData[item.prop]"
+                  v-bind="item.attrs"
+                  v-on="item.event"
+                >
+                  {{ item.content }}
+                </component>
+              </el-form-item>
+            </el-col>
+          </template>
+          <el-col :span="24">
+            <el-form-item>
+              <el-row :gutter="12">
+                <el-col span="12">
+                  <el-button type="primary" size="small" @click="submit">
+                    应用
+                  </el-button>
+                </el-col>
+                <el-col span="12">
+                  <el-button size="small" @click="close">
+                    关闭
+                  </el-button>
+                </el-col>
+              </el-row>
             </el-form-item>
           </el-col>
         </el-row>
-        <!-- 连接中转服务开关 -->
-        <el-form-item
-          label="连接中转服务(node-hiprint-transit)"
-          prop="connectTransit"
-        >
-          <el-switch
-            v-model="formData.connectTransit"
-            @change="onChange({prop: 'connectTransit', value: $event})"
-          ></el-switch>
-        </el-form-item>
-        <template v-if="formData.connectTransit">
-          <!-- 中转服务 token 设置 -->
-          <el-form-item label="服务器地址" prop="transitUrl">
-            <el-input
-              v-model="formData.transitUrl"
-              size="small"
-              placeholder="请输入中转服务地址"
-            ></el-input>
-          </el-form-item>
-          <el-row :gutter="12">
-            <el-col :span="18">
-              <!-- 中转服务 token 设置 -->
-              <el-form-item label="TOKEN 设置" prop="transitToken">
-                <el-input
-                  v-model="formData.transitToken"
-                  size="small"
-                  placeholder="请输入中转服务 TOKEN"
-                ></el-input>
-              </el-form-item>
-            </el-col>
-            <el-col :span="6">
-              <!-- 测试中转服务 连接 -->
-              <el-form-item label="连通性测试">
-                <el-button class="transitTest" size="small" @click="handleTest">
-                  测试
-                </el-button>
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </template>
-        <!-- 允许通知 设置 -->
-        <el-form-item label="允许通知" prop="allowNotify">
-          <el-switch v-model="formData.allowNotify"></el-switch>
-        </el-form-item>
-        <!-- 关闭窗口 设置 -->
-        <el-form-item label="关闭主窗口" prop="closeType">
-          <el-radio-group v-model="formData.closeType">
-            <el-radio label="tray">最小化到托盘</el-radio>
-            <el-radio label="quit">退出程序</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <!-- 按钮组 -->
-        <el-form-item>
-          <el-row :gutter="12">
-            <el-col span="12">
-              <el-button type="primary" size="small" @click="submit"
-                >应用</el-button
-              >
-            </el-col>
-            <el-col span="12">
-              <el-button size="small" @click="close">关闭</el-button>
-            </el-col>
-          </el-row>
-        </el-form-item>
       </el-form>
     </div>
     <script type="text/javascript">
@@ -192,10 +141,27 @@
       const store = new Store();
 
       let ipc = ipcRenderer;
+
       new Vue({
         el: "#app",
         data: () => {
           return {
+            setTab: "basicSet",
+            tabs: [
+              {
+                label: "基础设置",
+                name: "basicSet",
+                height: 600,
+              },
+              {
+                label: "中转设置",
+                name: "transitSet",
+              },
+              {
+                label: "高级设置",
+                name: "advancedSet",
+              },
+            ],
             // 设置值
             formData: {
               port: 17521,
@@ -208,118 +174,396 @@
               transitToken: "",
               allowNotify: false,
               closeType: "tray",
+              logPath: "",
+              pdfPath: "",
             },
             // 预制的版本，解决部分内网无法获取新版本的问题
             versions: [
               {
+                version: "0.0.58-fix",
+                updateTime: "2024/11/03 21:23:54",
+              },
+              {
                 version: "0.0.56",
-                time: 1700405025750,
                 updateTime: "2023/11/19 22:43:45",
               },
               {
                 version: "0.0.54-fix",
-                time: 1688956459696,
                 updateTime: "2023/07/10 10:34:19",
               },
               {
-                version: "0.0.54",
-                time: 1688525681271,
-                updateTime: "2023/07/05 10:54:41",
-              },
-              {
                 version: "0.0.52",
-                time: 1683539873782,
                 updateTime: "2023/05/08 17:57:53",
               },
-              {
-                version: "0.0.50",
-                time: 1680228434697,
-                updateTime: "2023/03/31 10:07:14",
-              },
-              {
-                version: "0.0.48",
-                time: 1678354234564,
-                updateTime: "2023/03/09 17:30:34",
-              },
-              {
-                version: "0.0.46",
-                time: 1677118403361,
-                updateTime: "2023/02/23 10:13:23",
-              },
             ],
-            // 校验规则
-            rules: {
-              port: [
-                {
-                  required: true,
-                  message: "端口号不能为空",
-                  trigger: "blur",
-                },
-              ],
-              token: [
-                {
-                  min: 5,
-                  max: 32,
-                  message: "只能输入5-32个字符作为TOKEN",
-                  trigger: "blur",
-                }
-              ],
-              transitUrl: [
-                {
-                  required: true,
-                  message: "中转服务器地址不能为空",
-                  trigger: "blur",
-                },
-              ],
-              transitToken: [
-                {
-                  required: true,
-                  message: "中转服务 Token 不能为空",
-                  trigger: "blur",
-                },
-              ],
-            },
+            downloadedVersions: [], // 存储已下载版本
           };
         },
+        computed: {
+          formOptions() {
+            return {
+              size: "small",
+              labelPosition: "top",
+              inline: true,
+              span: 24,
+              spellcheck: false,
+              items: [
+                {
+                  label: "端口设置",
+                  prop: "port",
+                  is: "el-input-number",
+                  attrs: {
+                    min: 10000,
+                    max: 65535,
+                    controls: false,
+                    placeholder: "请输入10000-65535之间的端口号(17521)",
+                  },
+                  display: this.setTab === "basicSet",
+                  rules: [
+                    {
+                      required: true,
+                      message: "端口号不能为空",
+                      trigger: "blur",
+                    },
+                  ],
+                },
+                {
+                  label: "TOKEN 设置",
+                  prop: "token",
+                  is: "el-input",
+                  attrs: {
+                    minlength: 5,
+                    maxlength: 32,
+                    placeholder: "请输入5-32个字符作为TOKEN",
+                  },
+                  display: this.setTab === "basicSet",
+                  rules: [
+                    {
+                      min: 5,
+                      max: 32,
+                      message: "只能输入5-32个字符作为TOKEN",
+                      trigger: "blur",
+                    },
+                  ],
+                },
+                {
+                  label: "插件版本设置",
+                  prop: "pluginVersion",
+                  is: "el-select",
+                  optionIs: "el-option",
+                  attrs: {
+                    filterable: true,
+                    defaultFirstOption: true,
+                  },
+                  options: this.versions,
+                  optionRender: (h, option) => {
+                    const isDownloaded = this.downloadedVersions.includes(
+                      option.value,
+                    );
+                    return h(
+                      "div",
+                      {
+                        style: {
+                          display: "flex",
+                          justifyContent: "space-between",
+                        },
+                      },
+                      [
+                        h(
+                          "span",
+                          {
+                            style: {
+                              fontFamily: "monospace",
+                            },
+                          },
+                          option.value,
+                        ),
+                        h(
+                          "span",
+                          {
+                            style: {
+                              fontFamily: "monospace",
+                            },
+                          },
+                          [
+                            option.info,
+                            h("i", {
+                              class: "el-icon-success",
+                              style: {
+                                color: isDownloaded ? "#67C23A" : "transparent",
+                                marginLeft: "4px",
+                              },
+                            }),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                  event: {
+                    change: (val) => {
+                      const isDownloaded = this.downloadedVersions.includes(
+                        val,
+                      );
+                      if (!isDownloaded) {
+                        ipc.send("downloadPlugin", val);
+                      }
+                    },
+                  },
+                  display: this.setTab === "basicSet",
+                },
+                {
+                  label: "日志路径",
+                  prop: "logPath",
+                  is: "el-input",
+                  attrs: {
+                    readonly: true,
+                  },
+                  event: {
+                    click: () => {
+                      this.openDirectory("logPath");
+                    },
+                  },
+                  span: 18,
+                  display: this.setTab === "basicSet",
+                },
+                {
+                  label: "选择路径",
+                  is: "el-button",
+                  event: {
+                    click: () => {
+                      this.chooseDirectory("logPath");
+                    },
+                  },
+                  content: "选择",
+                  span: 6,
+                  display: this.setTab === "basicSet",
+                },
+                {
+                  label: "PDF 缓存路径",
+                  prop: "pdfPath",
+                  is: "el-input",
+                  attrs: {
+                    readonly: true,
+                  },
+                  event: {
+                    click: () => {
+                      this.openDirectory("pdfPath");
+                    },
+                  },
+                  style: {
+                    marginBottom: "60px",
+                  },
+                  span: 18,
+                  display: this.setTab === "basicSet",
+                },
+                {
+                  label: "选择路径",
+                  is: "el-button",
+                  event: {
+                    click: () => {
+                      this.chooseDirectory("pdfPath");
+                    },
+                  },
+                  content: "选择",
+                  span: 6,
+                  style: {
+                    marginBottom: "60px",
+                  },
+                  display: this.setTab === "basicSet",
+                },
+                {
+                  label: "连接中转服务(node-hiprint-transit)",
+                  prop: "connectTransit",
+                  is: "el-switch",
+                  event: {
+                    change: () => this.handleTabChange(),
+                  },
+                  display: this.setTab === "transitSet",
+                },
+                {
+                  label: "服务器地址",
+                  prop: "transitUrl",
+                  is: "el-input",
+                  attrs: {
+                    placeholder: "请输入中转服务地址",
+                  },
+                  display:
+                    this.setTab === "transitSet" &&
+                    this.formData.connectTransit,
+                  rules: [
+                    {
+                      required: true,
+                      message: "中转服务器地址不能为空",
+                      trigger: "blur",
+                    },
+                  ],
+                },
+                {
+                  label: "服务器 TOKEN",
+                  prop: "transitToken",
+                  is: "el-input",
+                  attrs: {
+                    minlength: 5,
+                    maxlength: 32,
+                    placeholder: "请输入中转服务 TOKEN",
+                  },
+                  span: 18,
+                  display:
+                    this.setTab === "transitSet" &&
+                    this.formData.connectTransit,
+                  rules: [
+                    {
+                      required: true,
+                      message: "中转服务 Token 不能为空",
+                      trigger: "blur",
+                    },
+                  ],
+                },
+                {
+                  label: "连通性测试",
+                  prop: "connectTest",
+                  is: "el-button",
+                  event: {
+                    click: this.handleTest,
+                  },
+                  content: "测试",
+                  span: 6,
+                  display:
+                    this.setTab === "transitSet" &&
+                    this.formData.connectTransit,
+                },
+                {
+                  label: "开机启动(请注意杀毒软件拦截)",
+                  prop: "openAtLogin",
+                  is: "el-switch",
+                  span: 12,
+                  display: this.setTab === "advancedSet",
+                },
+                {
+                  label: "静默启动",
+                  prop: "openAsHidden",
+                  is: "el-switch",
+                  span: 12,
+                  display: this.setTab === "advancedSet",
+                },
+                {
+                  label: "允许通知",
+                  prop: "allowNotify",
+                  is: "el-switch",
+                  display: this.setTab === "advancedSet",
+                },
+                {
+                  label: "关闭主窗口动作",
+                  prop: "closeType",
+                  is: "el-radio-group",
+                  optionIs: "el-radio",
+                  options: [
+                    {
+                      label: "tray",
+                      border: true,
+                      content: "最小化到托盘",
+                      style: {
+                        marginRight: "6px",
+                      }
+                    },
+                    {
+                      label: "quit",
+                      border: true,
+                      content: "退出程序",
+                      style: {
+                        marginLeft: "6px",
+                      }
+                    },
+                  ],
+                  display: this.setTab === "advancedSet",
+                },
+              ],
+            };
+          },
+          rules() {
+            const obj = {};
+            this.formOptions.items.forEach(({ prop, rules }) => {
+              if (Array.isArray(rules)) {
+                obj[prop] = rules;
+              }
+            });
+            return obj;
+          },
+        },
         created() {
+          ipc.on("downloadedVersions", (event, versions) => {
+            this.downloadedVersions = versions;
+          });
           // 获取配置
-          ipc.send("getConfig");
-          ipc.on("onConfig", this.onConfig);
+          this.formData = store.store;
           this.getVersions();
         },
+        mounted() {
+          this.handleTabChange();
+        },
+        beforeDestroy() {
+          ipc.removeAllListeners("openDialog");
+        },
         methods: {
-          /**
-           * @description: 表单 change 事件
-           * @param {String} prop change 字段名
-           * @param {Any} value change 值
-           * @return {Void}
-           */
-          onChange({ prop, value }) {
-            switch (prop) {
-              case "connectTransit":
-                ipc.send("setContentSize", {
-                  width: 400,
-                  height: value ? 776 : 600,
-                });
-                break;
-              case "pluginVersion":
-                // TODO: 下载插件对应 js、css 文件到本地
-                break;
-            }
-          },
-          /**
-           * @description: 测试连接
-           * @return {Void}
-           */
-          handleTest() {
-            ipc.send("testTransit", {
-              url: this.formData.transitUrl,
-              token: this.formData.transitToken,
+          handleTabChange() {
+            this.$nextTick(() => {
+              let { height, width } = document
+                .querySelector("#app")
+                .getBoundingClientRect();
+              height = Math.ceil(height);
+              width = Math.ceil(width);
+              ipc.send("setContentSize", {
+                width,
+                height,
+              });
             });
           },
           /**
+           * @description: 测试连接
+           * @return {void}
+           */
+          handleTest() {
+            this.$refs.formRef.validate((valid) => {
+              if (valid) {
+                ipc.send("testTransit", {
+                  url: this.formData.transitUrl,
+                  token: this.formData.transitToken,
+                });
+              } else {
+                return false;
+              }
+            });
+          },
+          /**
+           * @description: 选择目录
+           * @param {string} type - 目录类型
+           * @return {void}
+           */
+          chooseDirectory(type) {
+            ipc.send("showOpenDialog", {
+              title: "选择日志存储路径",
+              defaultPath: this.formData[type],
+              properties: ["openDirectory"],
+            });
+            ipc.once("openDialog", (event, result) => {
+              if (!result.canceled) {
+                this.$set(this.formData, type, result.filePaths[0]);
+              }
+            });
+          },
+          /**
+           * @description: 打开目录
+           * @param {string} type - 目录类型
+           * @return {void}
+           */
+          openDirectory(type) {
+            if (this.formData[type]) {
+              ipc.send("openDirectory", this.formData[type]);
+            }
+          },
+          /**
            * @description: 提交设置
-           * @return {Void}
+           * @return {void}
            */
           submit() {
             this.$refs.formRef.validate((valid) => {
@@ -328,58 +572,57 @@
               } else {
                 return false;
               }
-            })
+            });
           },
           /**
            * @description: 关闭窗口
-           * @return {Void}
+           * @return {void}
            */
           close() {
             ipc.send("closeSetWindow");
           },
           /**
-           * @description: 获取配置
-           * @param {IpcRendererEvent} event 事件
-           * @param {Any} data 数据
-           * @return {Void}
-           */
-          onConfig(event, data) {
-            this.formData = data;
-            this.onChange({
-              prop: "connectTransit",
-              value: data.connectTransit,
-            });
-          },
-          /**
            * @description: 获取在线版本信息
-           * @return {Void}
+           * @return {void}
            */
           getVersions() {
             const xhr = new XMLHttpRequest();
             // cnpm 源
             xhr.open(
               "GET",
-              "https://registry.npmmirror.com/vue-plugin-hiprint"
+              "https://registry.npmmirror.com/vue-plugin-hiprint",
             );
             xhr.onload = () => {
               if (xhr.status === 200) {
                 this.npmInfo = JSON.parse(xhr.responseText);
                 this.versions = _.orderBy(
                   _.map(this.npmInfo.versions, ({ version }) => ({
-                    version,
+                    value: version,
                     time: dayjs(this.npmInfo.time[version]).valueOf(),
-                    updateTime: dayjs(this.npmInfo.time[version]).format(
-                      "YYYY/MM/DD HH:mm:ss"
+                    info: dayjs(this.npmInfo.time[version]).format(
+                      "YYYY/MM/DD HH:mm:ss",
                     ),
                   })),
                   "time",
-                  "desc"
+                  "desc",
                 );
-                this.formData.pluginVersion = this.versions[0].version;
               }
+            };
+            xhr.onerror = () => {
+              console.log("获取版本信息失败");
             };
             xhr.send();
           },
+        },
+      });
+
+      Vue.component("render-component", {
+        props: {
+          render: Function,
+          data: Object,
+        },
+        render(h) {
+          return this.render(h, this.data);
         },
       });
     </script>
