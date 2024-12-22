@@ -125,7 +125,12 @@ async function initialize() {
 
   // 获取设备唯一id
   ipcMain.on("getMachineId", (event) => {
-    event.sender.send("machineId", machineIdSync({ original: true }));
+    try {
+      const machineId = machineIdSync({ original: true });
+      event.sender.send("machineId", machineId);
+    } catch (error) {
+      event.sender.send("machineId", "");
+    }
   });
 
   // 获取设备ip、mac等信息
