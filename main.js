@@ -1,8 +1,8 @@
 /*
  * @Date: 2024-01-25 15:52:14
  * @LastEditors: admin@54xavier.cn
- * @LastEditTime: 2024-12-15 01:30:48
- * @FilePath: /electron-hiprint/main.js
+ * @LastEditTime: 2024-12-23 15:23:56
+ * @FilePath: \electron-hiprint\main.js
  */
 const {
   app,
@@ -325,13 +325,13 @@ function initTray() {
       },
     },
     {
-      label: "打印记录",
+      label: "软件日志",
       click: () => {
         shell.openPath(app.getPath("logs"));
       },
     },
     {
-      label: "软件日志",
+      label: "打印记录",
       click: () => {
         if (!PRINT_LOG_WINDOW) {
           printLogSetup();
