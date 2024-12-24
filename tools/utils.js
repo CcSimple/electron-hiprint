@@ -245,7 +245,7 @@ function initServeEvent(server) {
   /**
    * @description: 新的 web client 连入，绑定 socket 事件
    */
-  server.on("connect", (socket) => {
+  server.on("connect", async (socket) => {
     log(`==> 插件端 New Connected: ${socket.id}`);
 
     // 通知渲染进程已连接
@@ -266,7 +266,10 @@ function initServeEvent(server) {
     }
 
     // 向 client 发送打印机列表
-    socket.emit("printerList", MAIN_WINDOW.webContents.getPrintersAsync());
+    socket.emit(
+      "printerList",
+      await MAIN_WINDOW.webContents.getPrintersAsync(),
+    );
 
     // 向 client 发送客户端信息
     emitClientInfo(socket);
@@ -310,9 +313,12 @@ function initServeEvent(server) {
     /**
      * @description: client 请求刷新打印机列表
      */
-    socket.on("refreshPrinterList", () => {
+    socket.on("refreshPrinterList", async () => {
       log(`插件端 ${socket.id}: refreshPrinterList`);
-      socket.emit("printerList", MAIN_WINDOW.webContents.getPrintersAsync());
+      socket.emit(
+        "printerList",
+        await MAIN_WINDOW.webContents.getPrintersAsync(),
+      );
     });
 
     /**
@@ -514,7 +520,7 @@ function initClientEvent() {
   /**
    * @description: 连接中转服务成功，绑定 socket 事件
    */
-  client.on("connect", () => {
+  client.on("connect", async () => {
     log(`==> 中转服务 Connected Transit Server: ${client.id}`);
     // 通知渲染进程已连接
     MAIN_WINDOW.webContents.send("clientConnection", true);
@@ -531,7 +537,10 @@ function initClientEvent() {
     }
 
     // 向 中转服务 发送打印机列表
-    client.emit("printerList", MAIN_WINDOW.webContents.getPrintersAsync());
+    client.emit(
+      "printerList",
+      await MAIN_WINDOW.webContents.getPrintersAsync(),
+    );
 
     // 向 中转服务 发送客户端信息
     emitClientInfo(client);
@@ -548,9 +557,12 @@ function initClientEvent() {
   /**
    * @description: 中转服务 请求刷新打印机列表
    */
-  client.on("refreshPrinterList", () => {
+  client.on("refreshPrinterList", async () => {
     log(`中转服务 ${client.id}: refreshPrinterList`);
-    client.emit("printerList", MAIN_WINDOW.webContents.getPrintersAsync());
+    client.emit(
+      "printerList",
+      await MAIN_WINDOW.webContents.getPrintersAsync(),
+    );
   });
 
   /**

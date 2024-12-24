@@ -49,14 +49,14 @@ async function createPrintWindow() {
  * @return {Void}
  */
 function initPrintEvent() {
-  ipcMain.on("do", (event, data) => {
+  ipcMain.on("do", async (event, data) => {
     let socket = null;
     if (data.clientType === "local") {
       socket = SOCKET_SERVER.sockets.sockets.get(data.socketId);
     } else {
       socket = SOCKET_CLIENT;
     }
-    const printers = PRINT_WINDOW.webContents.getPrinters();
+    const printers = await PRINT_WINDOW.webContents.getPrintersAsync();
     let havePrinter = false;
     let defaultPrinter = "";
     let printerError = false;

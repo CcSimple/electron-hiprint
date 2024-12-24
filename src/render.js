@@ -316,14 +316,14 @@ function printToPDF(event, data) {
  * @param {object} data 打印数据
  *
  * */
-function printFun(event, data) {
+async function printFun(event, data) {
   let socket = null;
   if (data.clientType === "local") {
     socket = SOCKET_SERVER.sockets.sockets.get(data.socketId);
   } else {
     socket = SOCKET_CLIENT;
   }
-  const printers = RENDER_WINDOW.webContents.getPrinters();
+  const printers = await RENDER_WINDOW.webContents.getPrintersAsync();
   let havePrinter = false;
   let defaultPrinter = "";
   let printerError = false;
