@@ -298,6 +298,7 @@ function initSetEvent() {
   ipcMain.on("testTransit", testTransit);
   ipcMain.on("closeSetWindow", closeSetWindow);
   ipcMain.on("downloadPlugin", downloadPlugin);
+  ipcMain.on("getPrintersList", getPrintersList);
 }
 
 /**
@@ -313,6 +314,7 @@ function removeEvent() {
   ipcMain.removeListener("testTransit", testTransit);
   ipcMain.removeListener("closeSetWindow", closeSetWindow);
   ipcMain.removeListener("downloadPlugin", downloadPlugin);
+  ipcMain.removeListener("getPrintersList", getPrintersList);
   SET_WINDOW = null;
 }
 
@@ -328,6 +330,24 @@ function getDownloadedVersions() {
     .readdirSync(pluginDir)
     .filter((file) => file.endsWith(".js")) // 假设插件文件以 .js 结尾
     .map((file) => file.split("_")[0]); // 提取版本号
+}
+
+/**
+ * @description: 获取打印机列表并发送给渲染进程
+ * @param {IpcMainEvent} event
+ * @return {void}
+ */
+async function getPrintersList(event) {
+  try {
+    const printers = await SET_WINDOW.webContents.getPrintersAsync();
+    let list = printers.map(item => {
+      return { value: item.name };
+    })
+    SET_WINDOW.webContents.send("getPrintersList", list);
+  } catch (error) {
+    console.error('获取打印机列表失败:', error);
+    SET_WINDOW.webContents.send("getPrintersList", []);
+  }
 }
 
 module.exports = async () => {

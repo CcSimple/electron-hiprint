@@ -65,6 +65,10 @@ const schema = {
     type: "string",
     default: app.getPath("temp"),
   },
+  defaultPrinter: {
+    type: "string",
+    default: '',
+  }
 };
 
 const store = new Store({ schema });

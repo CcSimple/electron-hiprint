@@ -82,6 +82,10 @@ function initPrintEvent() {
         defaultPrinter = element.name;
       }
     });
+    const storeDefaultPrinter = store.get("defaultPrinter"); // 获取store是否设置有保存打印机
+    if (storeDefaultPrinter !== '' && !havePrinter) {
+      defaultPrinter = storeDefaultPrinter;
+    }
     if (printerError) {
       log(
         `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
