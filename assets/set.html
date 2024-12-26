@@ -176,6 +176,7 @@
               closeType: "tray",
               logPath: "",
               pdfPath: "",
+              defaultPrinter:""
             },
             // 预制的版本，解决部分内网无法获取新版本的问题
             versions: [
@@ -197,6 +198,7 @@
               },
             ],
             downloadedVersions: [], // 存储已下载版本
+            printerList:[] // 打印机列表
           };
         },
         computed: {
@@ -447,6 +449,17 @@
                   display: this.setTab === "advancedSet",
                 },
                 {
+                  label: "默认打印机",
+                  prop: "defaultPrinter",
+                  is: "el-select",
+                  optionIs: "el-option",
+                  attrs: {
+                    clearable:true,
+                  },
+                  options: this.printerList,
+                  display: this.setTab === "advancedSet",
+                },
+                {
                   label: "允许通知",
                   prop: "allowNotify",
                   is: "el-switch",
@@ -491,12 +504,11 @@
           },
         },
         created() {
-          ipc.on("downloadedVersions", (event, versions) => {
-            this.downloadedVersions = versions;
-          });
+          this.onEvents();
           // 获取配置
           this.formData = store.store;
           this.getVersions();
+          this.getPrintersList();
         },
         mounted() {
           this.handleTabChange();
@@ -505,6 +517,14 @@
           ipc.removeAllListeners("openDialog");
         },
         methods: {
+          onEvents() {
+              ipcRenderer.on("downloadedVersions", (event, versions) => {
+              this.downloadedVersions = versions;
+            })
+              ipcRenderer.on("getPrintersList", (event, printers) => {
+              this.printerList = printers;
+            })
+          },
           handleTabChange() {
             this.$nextTick(() => {
               let { height, width } = document
@@ -613,6 +633,13 @@
             };
             xhr.send();
           },
+          /**
+           * @description: 获取打印机列表
+           * @return {void}
+          */
+          getPrintersList() {
+            ipcRenderer.send("getPrintersList"); // 请求打印机列表
+          }
         },
       });
 
