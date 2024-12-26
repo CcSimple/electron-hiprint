@@ -1,6 +1,6 @@
 {
   "name": "electron-hiprint",
-  "version": "1.0.12-beta2",
+  "version": "1.0.12-beta3",
   "description": "vue-plugin-hiprint client",
   "main": "main.js",
   "author": "CcSimple<840054486@qq.com>",
