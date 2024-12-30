@@ -91,13 +91,13 @@ async function createRenderWindow() {
     });
 
     windowWorkArea = display.workAreaSize;
-  });
 
-  // 未打包时打开开发者工具
-  if (!app.isPackaged) {
-    // !打开开发者模式时，窗口尺寸变化将在右上角显示窗口尺寸，对 capturePage 功能会造成一定的误解
-    RENDER_WINDOW.webContents.openDevTools();
-  }
+    // 未打包时打开开发者工具
+    if (!app.isPackaged) {
+      // !打开开发者模式时，窗口尺寸变化将在右上角显示窗口尺寸，对 capturePage 功能会造成一定的误解
+      RENDER_WINDOW.webContents.openDevTools();
+    }
+  });
 
   // 绑定窗口事件
   initEvent();

@@ -26,6 +26,12 @@
       window.$ = window.jQuery = require("jquery");
       window.autoConnect = false;
 
+      window.Nzh = require("nzh");
+
+      window["bwip-js"] = require("bwip-js");
+
+      window.JsBarcode = require("jsbarcode");
+
       window.template = undefined;
 
       window.io = () => {};
@@ -117,15 +123,11 @@
 
         const head = document.querySelector("head");
 
-        let cssSrc = `../plugin/${store.get(
-          "pluginVersion",
-        )}_print-lock.css`;
+        let cssSrc = `../plugin/${store.get("pluginVersion")}_print-lock.css`;
 
         // mac 打包版本路径特殊处理
         if (isPackaged) {
-          cssSrc = `../../plugin/${store.get(
-            "pluginVersion",
-          )}_print-lock.css`;
+          cssSrc = `../../plugin/${store.get("pluginVersion")}_print-lock.css`;
         }
 
         head.append(
