@@ -114,6 +114,30 @@ function setConfig(event, data) {
     })
     .then((res) => {
       if (res.response === 0) {
+        try {
+          const pdfPath = path.join(data.pdfPath, "url_pdf");
+          fs.mkdirSync(pdfPath, { recursive: true });
+        } catch {
+          dialog.showMessageBox(SET_WINDOW, {
+            type: "error",
+            title: "提示",
+            message: "pdf 保存路径无法写入，请重新设置！",
+            buttons: ["确定"],
+          });
+          return;
+        }
+        try {
+          const pdfPath = path.join(data.pdfPath, "hiprint");
+          fs.mkdirSync(pdfPath, { recursive: true });
+        } catch {
+          dialog.showMessageBox(SET_WINDOW, {
+            type: "error",
+            title: "提示",
+            message: "pdf 保存路径无法写入，请重新设置！",
+            buttons: ["确定"],
+          });
+          return;
+        }
         store.set(data);
         setTimeout(() => {
           app.relaunch();
@@ -139,7 +163,11 @@ function downloadPlugin(event, data) {
           (res) => {
             let filePath = "";
             if (app.isPackaged) {
-              filePath = path.join(app.getAppPath(), "../", `plugin/${data}_${url}`);
+              filePath = path.join(
+                app.getAppPath(),
+                "../",
+                `plugin/${data}_${url}`,
+              );
             } else {
               filePath = path.join(app.getAppPath(), `plugin/${data}_${url}`);
             }
@@ -204,6 +232,19 @@ function showMessageBox(event, data) {
  */
 function showOpenDialog(event, data) {
   dialog.showOpenDialog(SET_WINDOW, data).then((result) => {
+    if (!result.canceled) {
+      try {
+        fs.accessSync(result.filePaths[0], fs.constants.W_OK);
+      } catch {
+        dialog.showMessageBox(SET_WINDOW, {
+          type: "error",
+          title: "提示",
+          message: "路径无法写入，请重新选择！",
+          buttons: ["确定"],
+        });
+        result.canceled = true;
+      }
+    }
     event.reply("openDialog", result);
   });
 }
@@ -340,12 +381,12 @@ function getDownloadedVersions() {
 async function getPrintersList(event) {
   try {
     const printers = await SET_WINDOW.webContents.getPrintersAsync();
-    let list = printers.map(item => {
+    let list = printers.map((item) => {
       return { value: item.name };
-    })
+    });
     SET_WINDOW.webContents.send("getPrintersList", list);
   } catch (error) {
-    console.error('获取打印机列表失败:', error);
+    console.error("获取打印机列表失败:", error);
     SET_WINDOW.webContents.send("getPrintersList", []);
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "electron-hiprint",
-  "version": "1.0.12-beta4",
+  "version": "1.0.12-beta5",
   "description": "vue-plugin-hiprint client",
   "main": "main.js",
   "author": "CcSimple<840054486@qq.com>",
@@ -8,13 +8,13 @@
   "homepage": "https://gitee.com/CcSimple",
   "scripts": {
     "start": "node start.js",
-    "build-w": "electron-builder -w nsis:ia32 && node ./tools/rename --tag win_x32",
-    "build-w-64": "electron-builder -w nsis:x64 && node ./tools/rename --tag win_x64",
-    "build-m": "electron-builder -m --x64 && node ./tools/rename --tag mac_x64",
-    "build-m-arm64": "electron-builder -m --arm64 && node ./tools/rename --tag mac_arm64",
-    "build-m-universal": "electron-builder -m --universal && node ./tools/rename --tag mac_universal",
-    "build-l": "electron-builder -l tar.xz && node ./tools/rename --tag linux_64",
-    "build-l-arm64": "electron-builder -l --arm64 && node ./tools/rename --tag linux_arm64",
+    "build-w": "node ./build/fixSqlite3bug.js && electron-builder -w nsis:ia32 && node ./tools/rename --tag win_x32",
+    "build-w-64": "node ./build/fixSqlite3bug.js && electron-builder -w nsis:x64 && node ./tools/rename --tag win_x64",
+    "build-m": "node ./build/fixSqlite3bug.js && electron-builder -m --x64 && node ./tools/rename --tag mac_x64",
+    "build-m-arm64": "node ./build/fixSqlite3bug.js && electron-builder -m --arm64 && node ./tools/rename --tag mac_arm64",
+    "build-m-universal": "node ./build/fixSqlite3bug.js && electron-builder -m --universal && node ./tools/rename --tag mac_universal",
+    "build-l": "node ./build/fixSqlite3bug.js && electron-builder -l tar.xz && node ./tools/rename --tag linux_64",
+    "build-l-arm64": "node ./build/fixSqlite3bug.js && electron-builder -l --arm64 && node ./tools/rename --tag linux_arm64",
     "compress": "node ./tools/code_compress --compress",
     "restore": "node ./tools/code_compress --restore",
     "build-all": "npm run build-w && npm run build-w-64 && npm run build-m && npm run build-m-arm64 && npm run build-m-universal && npm run build-l && npm run build-l-arm64",
@@ -63,6 +63,7 @@
     "win": {
       "icon": "./build/icons/256x256.png",
       "artifactName": "${productName}-${version}.${ext}",
+      "requestedExecutionLevel": "requireAdministrator",
       "target": [
         {
           "target": "nsis"
@@ -100,7 +101,7 @@
     "pdf-to-printer": "^5.6.0",
     "socket.io": "^3.1.0",
     "socket.io-client": "^3.1.0",
-    "sqlite3": "5.1.6",
+    "sqlite3": "5.1.7",
     "unix-print": "^1.2.0",
     "uuid": "^11.0.3",
     "win32-pdf-printer": "^4.0.1"
