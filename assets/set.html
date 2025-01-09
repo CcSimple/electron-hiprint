@@ -560,8 +560,12 @@
            * @return {void}
            */
           chooseDirectory(type) {
+            const title = {
+              logPath: "选择日志存储路径",
+              pdfPath: "选择 PDF 缓存路径",
+            }[type]
             ipc.send("showOpenDialog", {
-              title: "选择日志存储路径",
+              title,
               defaultPath: this.formData[type],
               properties: ["openDirectory"],
             });
