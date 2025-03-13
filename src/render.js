@@ -8,6 +8,7 @@ const dayjs = require("dayjs");
 
 const log = require("../tools/log");
 const { store } = require("../tools/utils");
+const db = require("../tools/database");
 
 // 这是 1920 * 1080 屏幕常规工作区域尺寸
 let windowWorkArea = {
@@ -372,6 +373,28 @@ async function printFun(event, data) {
     return;
   }
   let deviceName = havePrinter ? data.printer : defaultPrinter;
+
+  const logPrintResult = (status, errorMessage = "") => {
+    db.run(
+      `INSERT INTO print_logs (socketId, clientType, printer, templateId, data, pageNum, status, errorMessage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        socket?.id,
+        data.clientType,
+        deviceName,
+        data.templateId,
+        JSON.stringify(data),
+        data.pageNum,
+        status,
+        errorMessage,
+      ],
+      (err) => {
+        if (err) {
+          console.error("Failed to log print result", err);
+        }
+      },
+    );
+  };
+
   // 打印 详见https://www.electronjs.org/zh/docs/latest/api/web-contents
   RENDER_WINDOW.webContents.print(
     {
@@ -409,6 +432,7 @@ async function printFun(event, data) {
             templateId: data.templateId,
             replyId: data.replyId,
           };
+          logPrintResult("success");
           socket.emit("render-print-success", result);
         } else {
           log(
@@ -416,6 +440,7 @@ async function printFun(event, data) {
               data.templateId
             }】 打印失败，打印类型 JSON，打印机：${deviceName}，原因：${failureReason}`,
           );
+          logPrintResult("failure", failureReason);
           socket.emit("render-print-error", {
             msg: failureReason,
             templateId: data.templateId,

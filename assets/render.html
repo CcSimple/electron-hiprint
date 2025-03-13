@@ -101,11 +101,14 @@
             window.template = new hiprint.PrintTemplate({
               template: data.template,
             });
-            $("#printElement").html(window.template.getHtml(data.data));
+            const html = window.template.getHtml(data.data);
+            $("#printElement").html(html);
             setTimeout(() => {
               ipcRenderer.send("print", {
                 ...data,
                 templateId: template.id,
+                html,
+                pageNum: $("#printElement .hiprint-printPaper").length,
               });
             });
           });
