@@ -7,6 +7,7 @@ const { Jimp } = require("jimp");
 const dayjs = require("dayjs");
 
 const log = require("../tools/log");
+const { store } = require("../tools/utils");
 
 // 这是 1920 * 1080 屏幕常规工作区域尺寸
 let windowWorkArea = {
@@ -349,6 +350,10 @@ async function printFun(event, data) {
       defaultPrinter = element.name;
     }
   });
+  const storeDefaultPrinter = store.get("defaultPrinter"); // 获取store是否设置有保存打印机
+  if (storeDefaultPrinter !== "" && !havePrinter) {
+    defaultPrinter = storeDefaultPrinter;
+  }
   if (printerError) {
     log(
       `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
