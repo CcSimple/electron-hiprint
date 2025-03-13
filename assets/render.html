@@ -73,7 +73,7 @@
             ).map((el) => el.getBoundingClientRect());
             const capturePageData = {
               ...data,
-              templateId: template.id,
+              templateId: data.templateId || template.id,
               x: rects[0].x,
               y: rects[0].y,
               width: rects[0].width,
@@ -92,7 +92,7 @@
             setTimeout(() => {
               ipcRenderer.send("printToPDF", {
                 ...data,
-                templateId: template.id,
+                templateId: data.templateId || template.id,
               });
             });
           });
@@ -106,8 +106,8 @@
             setTimeout(() => {
               ipcRenderer.send("print", {
                 ...data,
-                templateId: template.id,
                 html,
+                templateId: data.templateId || template.id,
                 pageNum: $("#printElement .hiprint-printPaper").length,
               });
             });
