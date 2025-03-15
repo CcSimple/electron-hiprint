@@ -106,7 +106,7 @@
             setTimeout(() => {
               ipcRenderer.send("print", {
                 ...data,
-                html,
+                html: html[0].innerHTML,
                 templateId: data.templateId || template.id,
                 pageNum: $("#printElement .hiprint-printPaper").length,
               });
