@@ -73,7 +73,7 @@
             ).map((el) => el.getBoundingClientRect());
             const capturePageData = {
               ...data,
-              templateId: template.id,
+              templateId: data.templateId || template.id,
               x: rects[0].x,
               y: rects[0].y,
               width: rects[0].width,
@@ -92,7 +92,7 @@
             setTimeout(() => {
               ipcRenderer.send("printToPDF", {
                 ...data,
-                templateId: template.id,
+                templateId: data.templateId || template.id,
               });
             });
           });
@@ -101,11 +101,14 @@
             window.template = new hiprint.PrintTemplate({
               template: data.template,
             });
-            $("#printElement").html(window.template.getHtml(data.data));
+            const html = window.template.getHtml(data.data);
+            $("#printElement").html(html);
             setTimeout(() => {
               ipcRenderer.send("print", {
                 ...data,
-                templateId: template.id,
+                html: html[0].innerHTML,
+                templateId: data.templateId || template.id,
+                pageNum: $("#printElement .hiprint-printPaper").length,
               });
             });
           });
