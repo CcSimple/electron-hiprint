@@ -309,6 +309,26 @@ function systemSetup() {
 }
 
 /**
+ * @description: 显示主窗口
+ * @return {Void}
+ */
+function showMainWindow() {
+  if (MAIN_WINDOW.isMinimized()) {
+    // 将窗口从最小化状态恢复到以前的状态
+    MAIN_WINDOW.restore();
+  }
+  if (!MAIN_WINDOW.isVisible()) {
+    // 主窗口关闭不会被销毁，只是隐藏，重新显示即可
+    MAIN_WINDOW.show();
+  }
+  if (!MAIN_WINDOW.isFocused()) {
+    // 主窗口未聚焦，使其聚焦
+    MAIN_WINDOW.focus();
+  }
+  MAIN_WINDOW.setSkipTaskbar(false);
+}
+
+/**
  * @description: 初始化托盘
  * @return {Tray} APP_TRAY 托盘实例
  */
@@ -322,6 +342,13 @@ function initTray() {
 
   // 托盘菜单
   const trayMenuTemplate = [
+    {
+      // 神知道为什么 linux 上无法识别 tray click、double-click，只能添加一个菜单
+      label: "显示主窗口",
+      click: () => {
+        showMainWindow();
+      },
+    },
     {
       label: "设置",
       click: () => {
@@ -356,20 +383,7 @@ function initTray() {
 
   // 监听点击事件
   APP_TRAY.on("click", function() {
-    if (MAIN_WINDOW.isMinimized()) {
-      // 将窗口从最小化状态恢复到以前的状态
-      MAIN_WINDOW.restore();
-      MAIN_WINDOW.setSkipTaskbar(false);
-    }
-    if (!MAIN_WINDOW.isVisible()) {
-      // 主窗口关闭不会被销毁，只是隐藏，重新显示即可
-      MAIN_WINDOW.show();
-      MAIN_WINDOW.setSkipTaskbar(false);
-    }
-    if (!MAIN_WINDOW.isFocused()) {
-      // 主窗口未聚焦，使其聚焦
-      MAIN_WINDOW.focus();
-    }
+    showMainWindow();
   });
   return APP_TRAY;
 }
