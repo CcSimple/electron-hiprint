@@ -12,6 +12,12 @@
     <title>打印窗口</title>
     <link href="./css/print-lock.css" rel="stylesheet" />
     <link href="./css/print-lock.css" media="print" rel="stylesheet" />
+    <style>
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+    </style>
     <script>
       window.$ = window.jQuery = require("jquery");
       $.fn.onImgLoaded = (callback) => {

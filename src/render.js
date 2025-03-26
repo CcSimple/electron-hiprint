@@ -76,6 +76,9 @@ async function createRenderWindow() {
       contextIsolation: false, // 设置此项为false后，才可在渲染进程中使用electron api
       nodeIntegration: true,
     },
+    // 为窗口设置背景色可能优化字体模糊问题
+    // https://www.electronjs.org/zh/docs/latest/faq#文字看起来很模糊这是什么原因造成的怎么解决这个问题呢
+    backgroundColor: "#fff",
   };
 
   // 创建打印窗口
