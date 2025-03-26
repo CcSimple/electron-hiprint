@@ -15,6 +15,7 @@
     "build-m-universal": "node ./build/fixSqlite3bug.js && electron-builder -m --universal && node ./tools/rename --tag mac_universal",
     "build-l": "node ./build/fixSqlite3bug.js && electron-builder -l tar.xz && node ./tools/rename --tag linux_64",
     "build-l-arm64": "node ./build/fixSqlite3bug.js && electron-builder -l --arm64 && node ./tools/rename --tag linux_arm64",
+    "build-kylin": "node ./build/fixSqlite3bug.js && electron-builder && node ./tools/rename --tag Kylin_64",
     "compress": "node ./tools/code_compress --compress",
     "restore": "node ./tools/code_compress --restore",
     "build-all": "npm run build-w && npm run build-w-64 && npm run build-m && npm run build-m-arm64 && npm run build-m-universal && npm run build-l && npm run build-l-arm64",
