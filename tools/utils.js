@@ -67,8 +67,12 @@ const schema = {
   },
   defaultPrinter: {
     type: "string",
-    default: '',
-  }
+    default: "",
+  },
+  disabledGpu: {
+    type: "boolean",
+    default: false,
+  },
 };
 
 const store = new Store({ schema });
