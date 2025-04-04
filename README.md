@@ -636,3 +636,7 @@ this.$error({
 - [electron-egg](https://gitee.com/wallace5303/electron-egg/)
 - [pdf-to-printer](https://github.com/artiebits/pdf-to-printer)
 - [unix-printer](https://github.com/artiebits/unix-print)
+
+## 感谢
+
+logo 设计：[橙色](mailto:tong567@foxmail.com)
