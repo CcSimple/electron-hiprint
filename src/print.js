@@ -276,7 +276,7 @@ function initPrintEvent() {
         copies: data.copies ?? 1, // 打印份数
         pageRanges: data.pageRanges ?? {}, // 打印页数
         duplexMode: data.duplexMode, // 打印模式 simplex,shortEdge,longEdge
-        dpi: data.dpi, // 打印机DPI
+        dpi: data.dpi ?? 300, // 打印机DPI
         header: data.header, // 打印头
         footer: data.footer, // 打印尾
         pageSize: data.pageSize, // 打印纸张
