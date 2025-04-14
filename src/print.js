@@ -113,7 +113,7 @@ function initPrintEvent() {
 
     const logPrintResult = (status, errorMessage = "") => {
       db.run(
-        `INSERT INTO print_logs (socketId, clientType, printer, templateId, data, pageNum, status, errorMessage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO print_logs (socketId, clientType, printer, templateId, data, pageNum, status,rePrintAble, errorMessage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           socket?.id,
           data.clientType,
@@ -122,6 +122,7 @@ function initPrintEvent() {
           JSON.stringify(data),
           data.pageNum,
           status,
+          data.rePrintAble ?? 1,
           errorMessage,
         ],
         (err) => {

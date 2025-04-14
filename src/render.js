@@ -379,7 +379,7 @@ async function printFun(event, data) {
 
   const logPrintResult = (status, errorMessage = "") => {
     db.run(
-      `INSERT INTO print_logs (socketId, clientType, printer, templateId, data, pageNum, status, errorMessage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO print_logs (socketId, clientType, printer, templateId, data, pageNum, status, rePrintAble, errorMessage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         socket?.id,
         data.clientType,
@@ -388,6 +388,7 @@ async function printFun(event, data) {
         JSON.stringify(data),
         data.pageNum,
         status,
+        data.rePrintAble ?? 1,
         errorMessage,
       ],
       (err) => {

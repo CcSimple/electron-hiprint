@@ -73,6 +73,10 @@ const schema = {
     type: "boolean",
     default: false,
   },
+  rePrint: {
+    type: "boolean",
+    default: true,
+  },
 };
 
 const store = new Store({ schema });
