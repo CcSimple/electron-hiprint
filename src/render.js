@@ -107,19 +107,9 @@ async function createRenderWindow() {
   // 绑定窗口事件
   initEvent();
 
+  RENDER_WINDOW.on("closed", removeEvent);
+
   return RENDER_WINDOW;
-}
-
-/**
- * @description: 初始化事件
- */
-function initEvent() {
-  ipcMain.on("capturePage", capturePage);
-  ipcMain.on("printToPDF", printToPDF);
-
-  ipcMain.on("print", printFun);
-
-  ipcMain.on("showMessageBox", showMessageBox);
 }
 
 /**
@@ -467,6 +457,28 @@ async function printFun(event, data) {
  */
 function showMessageBox(event, data) {
   dialog.showMessageBox(SET_WINDOW, data);
+}
+
+/**
+ * @description: 初始化事件
+ */
+function initEvent() {
+  ipcMain.on("capturePage", capturePage);
+  ipcMain.on("printToPDF", printToPDF);
+  ipcMain.on("print", printFun);
+  ipcMain.on("showMessageBox", showMessageBox);
+}
+
+/**
+ * @description: 移除事件
+ * @return {void}
+ */
+function removeEvent() {
+  ipcMain.removeListener("capturePage", capturePage);
+  ipcMain.removeListener("printToPDF", printToPDF);
+  ipcMain.removeListener("print", printFun);
+  ipcMain.removeListener("showMessageBox", showMessageBox);
+  RENDER_WINDOW = null;
 }
 
 module.exports = async () => {
