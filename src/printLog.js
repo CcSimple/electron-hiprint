@@ -5,7 +5,14 @@
  * @FilePath: /electron-hiprint/src/printlog.js
  */
 "use strict";
-const { app, BrowserWindow, BrowserView, ipcMain } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  BrowserView,
+  ipcMain,
+  dialog,
+} = require("electron");
+const dayjs = require("dayjs");
 const path = require("path");
 const db = require("../tools/database");
 
@@ -79,6 +86,7 @@ function loadingView(windowOptions) {
 
 /**
  * @description: 获取打印日志
+ * @param {IpcMainEvent} event 事件
  * @param {Array} condition 搜索条件
  * @param {Array} params 搜索参数
  * @param {Object} page 分页
@@ -86,7 +94,7 @@ function loadingView(windowOptions) {
  * @param {Function} callback 回调函数
  * @return {void}
  */
-function fetchPrintLogs({ condition, params, page, sort }, callback) {
+function fetchPrintLogs(event, { condition, params, page, sort }) {
   const baseQuery = `SELECT id, timestamp, socketId, clientType, printer, templateId, pageNum, status, rePrintAble, errorMessage FROM print_logs`;
   const totalQuery = `SELECT COUNT(*) AS total FROM print_logs`;
   let query = baseQuery;
@@ -110,6 +118,11 @@ function fetchPrintLogs({ condition, params, page, sort }, callback) {
     return new Promise((resolve, reject) => {
       db.all(query, params, (err, rows) => {
         if (err) return reject(err);
+        rows.forEach((row) => {
+          row.timestamp = dayjs(row.timestamp)
+            .add(8, "hour")
+            .format("YYYY-MM-DD HH:mm:ss");
+        });
         resolve(rows);
       });
     });
@@ -117,28 +130,38 @@ function fetchPrintLogs({ condition, params, page, sort }, callback) {
 
   Promise.all([allAsync(query, params), allAsync(total, params)])
     .then(([rows, total]) => {
-      callback(null, { rows, total: total[0].total });
+      event.sender.send("print-logs", {
+        rows,
+        total: total[0].total,
+      });
     })
     .catch((err) => {
-      callback(err, null);
+      dialog.showMessageBox(PRINT_LOG_WINDOW, {
+        type: "error",
+        title: "错误",
+        message: "获取打印日志失败！",
+        detail: err.message,
+      });
     });
 }
 
 /**
  * @description: 清空打印日志
+ * @param {IpcMainEvent} event 事件
  * @return {void}
  */
-function clearPrintLogs() {
+function clearPrintLogs(event) {
   db.run("DELETE FROM print_logs");
 }
 
 /**
  * @description: 重打打印
- * @param {Object} row 打印日志
+ * @param {IpcMainEvent}  event 事件
+ * @param {Object} data 打印日志
  * @return {void}
  */
-function rePrint(row) {
-  db.get("SELECT * FROM print_logs WHERE id = ?", [row.id], (err, row) => {
+function rePrint(event, data) {
+  db.get("SELECT * FROM print_logs WHERE id = ?", [data.id], (err, row) => {
     if (err) return;
     PRINT_WINDOW.webContents.send("reprint", {
       ...JSON.parse(row.data),
@@ -155,20 +178,9 @@ function rePrint(row) {
  * @return {void}
  */
 function initPrintLogEvent() {
-  ipcMain.on("request-logs", (event, { condition, params, page, sort }) => {
-    fetchPrintLogs({ condition, params, page, sort }, (err, logs) => {
-      if (err) return;
-      event.sender.send("print-logs", logs);
-    });
-  });
-
-  ipcMain.on("reprint", (event, row) => {
-    rePrint(row);
-  });
-
-  ipcMain.on("clear-logs", (event) => {
-    clearPrintLogs();
-  });
+  ipcMain.on("request-logs", fetchPrintLogs);
+  ipcMain.on("reprint", rePrint);
+  ipcMain.on("clear-logs", clearPrintLogs);
 }
 
 /**
