@@ -330,11 +330,18 @@ async function printFun(event, data) {
   }
   const printers = await RENDER_WINDOW.webContents.getPrintersAsync();
   let havePrinter = false;
-  let defaultPrinter = "";
+  let defaultPrinter = store.get("defaultPrinter", data.printer || "");
   let printerError = false;
   printers.forEach((element) => {
+    // 获取默认打印机
+    if (
+      element.isDefault &&
+      (defaultPrinter == "" || defaultPrinter == void 0)
+    ) {
+      defaultPrinter = element.name;
+    }
     // 判断打印机是否存在
-    if (element.name === data.printer) {
+    if (element.name === defaultPrinter) {
       // todo: 打印机状态对照表
       // win32: https://learn.microsoft.com/en-us/windows/win32/printdocs/printer-info-2
       // cups: https://www.cups.org/doc/cupspm.html#ipp_status_e
@@ -349,15 +356,7 @@ async function printFun(event, data) {
       }
       havePrinter = true;
     }
-    // 获取默认打印机
-    if (element.isDefault) {
-      defaultPrinter = element.name;
-    }
   });
-  const storeDefaultPrinter = store.get("defaultPrinter"); // 获取store是否设置有保存打印机
-  if (storeDefaultPrinter !== "" && !havePrinter) {
-    defaultPrinter = storeDefaultPrinter;
-  }
   if (printerError) {
     log(
       `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
@@ -375,7 +374,7 @@ async function printFun(event, data) {
     delete PRINT_RUNNER_DONE[data.taskId];
     return;
   }
-  let deviceName = havePrinter ? data.printer : defaultPrinter;
+  let deviceName = defaultPrinter;
 
   const logPrintResult = (status, errorMessage = "") => {
     db.run(

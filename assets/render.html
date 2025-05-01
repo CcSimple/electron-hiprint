@@ -43,6 +43,30 @@
       // 用于判断当前系统
       const platform = process.platform;
 
+      // 获取模板json. string或者json 统一处理
+      const getTemplateJson = (val) => {
+        try {
+          let template = val;
+          if ("string" == typeof template) {
+            template = JSON.parse(template);
+          }
+          if ("object" != typeof template) {
+            throw new Error("模板格式错误");
+          }
+          if (template.panels && template.panels.length == 0) {
+            throw new Error("模板格式错误");
+          }
+          return template;
+        } catch (error) {
+          ipcRenderer.send("showMessageBox", {
+            title: "模板格式错误",
+            message: `请传入正确的模板json`,
+            type: "error",
+            buttons: ["我知道了"],
+          });
+        }
+      };
+
       $(document).ready(function() {
         const script = document.createElement("script");
         script.setAttribute("type", "text/javascript");
@@ -87,8 +111,9 @@
           });
 
           ipcRenderer.on("pdf", (event, data) => {
+            let template = getTemplateJson(data.template);
             window.template = new hiprint.PrintTemplate({
-              template: data.template,
+              template: template,
             });
             $("#printElement").html(window.template.getHtml(data.data));
             setTimeout(() => {
@@ -100,8 +125,9 @@
           });
 
           ipcRenderer.on("print", (event, data) => {
+            let template = getTemplateJson(data.template);
             window.template = new hiprint.PrintTemplate({
-              template: data.template,
+              template: template,
             });
             const html = window.template.getHtml(data.data);
             $("#printElement").html(html);
