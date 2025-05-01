@@ -94,12 +94,15 @@ npm run build-w-64
   "closeType": "tray",
   "pluginVersion": "0.0.58-fix",
   "logPath": "C:\\Users\\Administrator\\AppData\\Roaming\\hiprint\\logs",
-  "pdfPath": "C:\\Users\\Administrator\\AppData\\Local\\Temp"
+  "pdfPath": "C:\\Users\\Administrator\\AppData\\Local\\Temp",
+  "defaultPrinter": "",
+  "disabledGpu": false,
+  "rePrint": true
 }
 ```
 
 ### 配置项说明
-1. `mainTitle` (String): 主标题
+1. `mainTitle` (String): 主标题（隐式设置）
 2. `openAtLogin` (Boolean): 系统登录时启动
 3. `openAsHidden` (Boolean): 启动时隐藏窗口
 4. `connectTransit` (Boolean): 连接中转服务
@@ -114,6 +117,19 @@ npm run build-w-64
 9. `pluginVersion` (String): vue-plugin-hiprint 插件版本
 10. `logPath` (String): 日志路径
 11. `pdfPath` (String): 临时文件路径
+12. `defaultPrinter` (String): 默认打印机
+13. `disabledGpu` (Boolean): 禁用 GPU 加速，可解决部分设备打印模糊问题，默认 `false`
+14. `rePrint` (Boolean): 是否允许重打默认 `true` （隐式设置）
+
+### 覆盖默认配置方法
+
+1. 二开项目，直接修改 [项目源码](./tools/utils.js) 并重新打包
+2. win `v1.0.12-beta6` 后续版本可在 `exe` 安装包路径添加 `config.json`,安装包会自动检测并使用该配置
+
+    ```
+    hiprint_win_x64-1.0.12-beta7.exe
+    config.json
+    ```
 
 ## 中转服务
 
@@ -475,12 +491,16 @@ socket.on("error", (res) => {
 })
 ```
 
-## vue-plugin-hiprint 通过 json + data 获取 jpeg、pdf、打印
+## 模板+data 返回 jpeg、pdf、打印
 
 > [!TIP]
-> 该功能属于 1.0.12-beta1 测试功能
+> 该功能属于 1.0.12-beta7 测试功能
 
 现在，你可以通过对应 socket 事件，调用 electron-hiprint 生成 jpeg、矢量 pdf 和直接打印了。
+
+对于 vue-plugin-hiprint 模板，只需要提供 template(json、jsonString) 和 data(json) 即可。
+
+非 vue-plugin-hiprint 模板，你需要提供 html（需要提供完整的样式含 UI、项目内部样式）。
 
 <div align="center">
 
@@ -495,6 +515,7 @@ socket.on("error", (res) => {
 hiprint.hiwebSocket.socket.emit("render-jpeg", {
   template: panel,
   data: printData,
+  html: "heml字符串",
 })
 socket.on("render-jpeg-success", (data) => {
   // data.buffer
@@ -506,6 +527,7 @@ socket.on("render-jpeg-error", (data) => {
 hiprint.hiwebSocket.socket.emit("render-pdf", {
   template: panel,
   data: printData,
+  html: "heml字符串",
 })
 socket.on("render-pdf-success", (data) => {
   // data.buffer
@@ -517,6 +539,7 @@ socket.on("render-pdf-error", (data) => {
 hiprint.hiwebSocket.socket.emit("render-print", {
   template: panel,
   data: printData,
+  html: "heml字符串",
   printer: "Microsoft Print to PDF",
   ...
 })
@@ -551,10 +574,13 @@ socket.on("connect", () => {
   socket.emit("render-jpeg", {
     template: panel,
     data: printData,
+    html: "heml字符串",
   });
   socket.on("render-jpeg-success", (data) => {
     fs.writeFile("./capture.jpeg", data.buffer, () => {})
   });
+  // render-pdf 同上
+  // render-print 同上
 });
 ```
 
@@ -583,6 +609,26 @@ socket.on("disconnect", () => {
 ![打印记录](./res/Print_log.png)
 
 </div>
+
+### 禁用重打
+
+1. 通过配置全局禁用重打
+
+   适合全局禁用重打，只提供日志查询，需在全局配置中设置禁用（设置页面未显式提供设置）
+    
+    - [覆盖默认配置方法](#覆盖默认配置方法)
+
+2. 通过 api 禁用单条数据重打
+    
+    ```js
+    // socket.io-client
+    socket.emit("news", { html, templateId, printer, pageSize, rePrintAble: false });
+    socket.emit("render-print", { template, data, rePrintAble: false });
+   
+    // vue-plugin-hiprint
+    hiprintTemplate.print2(printData, { printer, title, rePrintAble: false });
+    hiprint.hiwebSocket.socket.emit("render-print", { template, data, rePrintAble: false });
+    ```
 
 ## URL Scheme 支持
 

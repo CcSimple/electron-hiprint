@@ -55,7 +55,7 @@ const schema = {
   },
   pluginVersion: {
     type: "string",
-    default: "0.0.58-fix",
+    default: "0.0.60",
   },
   logPath: {
     type: "string",
@@ -150,7 +150,7 @@ const watchTaskInstance = generateWatchTask(
 /**
  * @description: 抛出当前客户端信息，提供更多有价值的信息，逐步替换原有 address
  * @param {io.Socket} socket
- * @return {Void}
+ * @return {void}
  */
 function emitClientInfo(socket) {
   _address.mac().then((mac) => {
@@ -229,7 +229,7 @@ function generateWatchTask(getCheckTarget) {
 /**
  * @description: 作为本地服务端时绑定的 socket 事件
  * @param {*} server
- * @return {Void}
+ * @return {void}
  */
 function initServeEvent(server) {
   // 必须传入实体
@@ -523,7 +523,7 @@ function initServeEvent(server) {
 
 /**
  * @description: 作为客户端连接中转服务时绑定的 socket 事件
- * @return {Void}
+ * @return {void}
  */
 function initClientEvent() {
   // 作为客户端连接中转服务时只有一个全局 client
