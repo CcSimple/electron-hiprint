@@ -107,8 +107,6 @@ async function initialize() {
     helper.appQuit();
   }
 
-  app.setAppLogsPath(store.get("logPath"));
-
   // 当运行第二个实例时,聚焦到 MAIN_WINDOW 这个窗口
   app.on("second-instance", () => {
     if (MAIN_WINDOW) {

@@ -7,8 +7,13 @@
 const { app } = require("electron");
 const { access, appendFile, constants, writeFile } = require("node:fs");
 const dayjs = require("dayjs");
+const Store = require("electron-store");
 
-const logs = app.getPath("logs");
+const store = new Store();
+
+const logs = store.get("logPath") || app.getPath("logs");
+
+app.setAppLogsPath(logs);
 
 /**
  * This function checks if a log file exists. If it does not exist, a new log file will be created.
