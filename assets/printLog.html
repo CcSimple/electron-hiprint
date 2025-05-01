@@ -122,7 +122,13 @@
           v-bind="column"
         >
           <template v-if="column.prop === 'action'" #default="{row}">
-            <el-button type="text" @click="handleRePrint(row)">重打</el-button>
+            <el-button
+              :disabled="row.rePrintAble === 0 || !rePrintAble"
+              type="text"
+              @click="handleRePrint(row)"
+            >
+              重打
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -143,6 +149,8 @@
 
     <script>
       const { ipcRenderer } = require("electron");
+      const Store = require("electron-store");
+      const store = new Store();
 
       new Vue({
         el: "#app",
@@ -217,7 +225,7 @@
             },
             sort: {
               prop: undefined,
-              order: undefined
+              order: undefined,
             },
             tableOptions: {
               currentPage: 1,
@@ -228,7 +236,7 @@
               stripe: true,
               class: "table",
               event: {
-                "sort-change": this.sortChange
+                "sort-change": this.sortChange,
               },
               columns: [
                 {
@@ -317,6 +325,11 @@
             },
           };
         },
+        computed: {
+          rePrintAble() {
+            return store.get("rePrint");
+          },
+        },
         created() {
           this.fetchLogs();
           ipcRenderer.on("print-logs", (event, { rows, total }) => {
@@ -351,13 +364,18 @@
               currentPage: this.tableOptions.currentPage,
               pageSize: this.tableOptions.pageSize,
             };
-            ipcRenderer.send("request-logs", { condition, params, page, sort: this.sort });
+            ipcRenderer.send("request-logs", {
+              condition,
+              params,
+              page,
+              sort: this.sort,
+            });
           },
-          sortChange({order, prop}) {
+          sortChange({ order, prop }) {
             this.sort = {
               prop,
               order,
-            }
+            };
             this.tableOptions.currentPage = 1;
             this.fetchLogs();
           },

@@ -53,7 +53,7 @@
           if ("object" != typeof template) {
             throw new Error("模板格式错误");
           }
-          if (template.panels && template.panels.length == 0) {
+          if (template.panels && template.panels.length === 0) {
             throw new Error("模板格式错误");
           }
           return template;
@@ -90,12 +90,17 @@
           ipcRenderer.on("png", (event, data) => {
             // 滚动窗口滚动条到左上角
             window.scrollTo(0, 0);
-            window.template = new hiprint.PrintTemplate({
-              template: data.template,
-            });
-            $("#printElement").html(window.template.getHtml(data.data));
+            let html = data.html;
+            if (data.template) {
+              window.template = new hiprint.PrintTemplate({
+                template: data.template,
+              });
+              html = window.template.getHtml(data.data);
+            }
+            const printElement = $("#printElement");
+            printElement.html(html);
             const rects = Array.from(
-              $("#printElement").find(".hiprint-printPaper"),
+              printElement.find(".hiprint-printPaper"),
             ).map((el) => el.getBoundingClientRect());
             const capturePageData = {
               ...data,
@@ -111,11 +116,15 @@
           });
 
           ipcRenderer.on("pdf", (event, data) => {
-            let template = getTemplateJson(data.template);
-            window.template = new hiprint.PrintTemplate({
-              template: template,
-            });
-            $("#printElement").html(window.template.getHtml(data.data));
+            let html = data.html;
+            if (data.template) {
+              let template = getTemplateJson(data.template);
+              window.template = new hiprint.PrintTemplate({
+                template: template,
+              });
+              html = window.template.getHtml(data.data);
+            }
+            $("#printElement").html(html);
             setTimeout(() => {
               ipcRenderer.send("printToPDF", {
                 ...data,
@@ -125,11 +134,14 @@
           });
 
           ipcRenderer.on("print", (event, data) => {
-            let template = getTemplateJson(data.template);
-            window.template = new hiprint.PrintTemplate({
-              template: template,
-            });
-            const html = window.template.getHtml(data.data);
+            let html = data.html;
+            if (data.template) {
+              let template = getTemplateJson(data.template);
+              window.template = new hiprint.PrintTemplate({
+                template: template,
+              });
+              html = window.template.getHtml(data.data);
+            }
             $("#printElement").html(html);
             setTimeout(() => {
               ipcRenderer.send("print", {

@@ -87,7 +87,7 @@ function loadingView(windowOptions) {
  * @return {void}
  */
 function fetchPrintLogs({ condition, params, page, sort }, callback) {
-  const baseQuery = `SELECT id, timestamp, socketId, clientType, printer, templateId, pageNum, status, errorMessage FROM print_logs`;
+  const baseQuery = `SELECT id, timestamp, socketId, clientType, printer, templateId, pageNum, status, rePrintAble, errorMessage FROM print_logs`;
   const totalQuery = `SELECT COUNT(*) AS total FROM print_logs`;
   let query = baseQuery;
   let total = totalQuery;
@@ -97,7 +97,6 @@ function fetchPrintLogs({ condition, params, page, sort }, callback) {
     total += " WHERE " + condition.join(" AND ");
   }
 
-  console.log(sort);
   if (sort.prop && sort.order) {
     query += ` ORDER BY ${sort.prop} ${sort.order
       .replace("ending", "")
