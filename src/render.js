@@ -443,7 +443,7 @@ async function printFun(event, data) {
               data.templateId
             }】 打印失败，打印类型 JSON，打印机：${deviceName}，原因：${failureReason}`,
           );
-          logPrintResult("failure", failureReason);
+          logPrintResult("failed", failureReason);
           socket.emit("render-print-error", {
             msg: failureReason,
             templateId: data.templateId,

@@ -112,7 +112,7 @@ function initPrintEvent() {
 
     const logPrintResult = (status, errorMessage = "") => {
       db.run(
-        `INSERT INTO print_logs (socketId, clientType, printer, templateId, data, pageNum, status,rePrintAble, errorMessage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO print_logs (socketId, clientType, printer, templateId, data, pageNum, status, rePrintAble, errorMessage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           socket?.id,
           data.clientType,
@@ -194,7 +194,7 @@ function initPrintEvent() {
                   templateId: data.templateId,
                   replyId: data.replyId,
                 });
-              logPrintResult("failure", err.message);
+              logPrintResult("failed", err.message);
             })
             .finally(() => {
               if (data.taskId) {
@@ -245,7 +245,7 @@ function initPrintEvent() {
               templateId: data.templateId,
               replyId: data.replyId,
             });
-          logPrintResult("failure", err.message);
+          logPrintResult("failed", err.message);
         })
         .finally(() => {
           if (data.taskId) {
@@ -297,7 +297,7 @@ function initPrintEvent() {
               data.templateId
             }】 打印失败，打印类型 HTML，打印机：${deviceName}，原因：${failureReason}`,
           );
-          logPrintResult("failure", failureReason);
+          logPrintResult("failed", failureReason);
         }
         if (socket) {
           if (success) {
