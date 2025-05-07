@@ -330,7 +330,7 @@ async function printFun(event, data) {
   }
   const printers = await RENDER_WINDOW.webContents.getPrintersAsync();
   let havePrinter = false;
-  let defaultPrinter = store.get("defaultPrinter", data.printer || "");
+  let defaultPrinter = data.printer || store.get("defaultPrinter", "");
   let printerError = false;
   printers.forEach((element) => {
     // 获取默认打印机
