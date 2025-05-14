@@ -518,7 +518,7 @@ function initServeEvent(server) {
      */
     socket.on("disconnect", () => {
       log(`==> 插件端 Disconnect: ${socket.id}`);
-      MAIN_WINDOW.webContents.send(
+      MAIN_WINDOW?.webContents?.send(
         "serverConnection",
         server.engine.clientsCount,
       );
