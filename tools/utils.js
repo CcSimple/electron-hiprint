@@ -15,6 +15,10 @@ const schema = {
     type: "string",
     default: "Electron-hiprint",
   },
+  nickName: {
+    type: "string",
+    default: "",
+  },
   openAtLogin: {
     type: "boolean",
     default: true,
@@ -164,6 +168,7 @@ function emitClientInfo(socket) {
       ipv6: _address.ipv6(), // ipv6 地址
       clientUrl: `http://${_address.ip()}:${store.get("port") || 17521}`, // 客户端地址
       machineId: machineIdSync({ original: true }), // 客户端唯一id
+      nickName: store.get("nickName"), // 客户端昵称
     });
   });
 }

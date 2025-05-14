@@ -170,6 +170,7 @@
               openAtLogin: false,
               openAsHidden: false,
               connectTransit: false,
+              nickName: "",
               transitUrl: "",
               transitToken: "",
               allowNotify: false,
@@ -247,6 +248,16 @@
                       trigger: "blur",
                     },
                   ],
+                },
+                {
+                  label: "别名",
+                  prop: "nickName",
+                  is: "el-input",
+                  attrs: {
+                    placeholder: "请输入便于识别的别名",
+                  },
+                  display:
+                    this.setTab === "basicSet",
                 },
                 {
                   label: "插件版本设置",
