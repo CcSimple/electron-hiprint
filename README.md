@@ -83,6 +83,7 @@ npm run build-w-64
 ```json
 {
   "mainTitle": "Electron-hiprint",
+  "nickName": "",
   "openAtLogin": true,
   "openAsHidden": true,
   "port": "17521",
@@ -103,23 +104,24 @@ npm run build-w-64
 
 ### 配置项说明
 1. `mainTitle` (String): 主标题（隐式设置）
-2. `openAtLogin` (Boolean): 系统登录时启动
-3. `openAsHidden` (Boolean): 启动时隐藏窗口
-4. `connectTransit` (Boolean): 连接中转服务
-5. `port` (String | Number) ( 10000 - 65535 ) 端口号默认为 `17521`
-6. `token` String( * | null ) 身份验证令牌，支持固定 Token
+2. `nickName` (String): 可设置的便于识别的友好设备名称
+3. `openAtLogin` (Boolean): 系统登录时启动
+4. `openAsHidden` (Boolean): 启动时隐藏窗口
+5. `connectTransit` (Boolean): 连接中转服务
+6. `port` (String | Number) ( 10000 - 65535 ) 端口号默认为 `17521`
+7. `token` String( * | null ) 身份验证令牌，支持固定 Token
     - [vue-plugin-hiprint](https://github.com/CcSimple/vue-plugin-hiprint.git) 需要使用 [0.0.55](https://www.npmjs.com/package/vue-plugin-hiprint?activeTab=versions) 之后的版本
-7. `transitUrl` (String): 中转服务地址
-8. `transitToken` (String): 中转服务令牌
-8. `closeType` (String): 窗口关闭行为 (tray 或 quit)
+8. `transitUrl` (String): 中转服务地址
+9. `transitToken` (String): 中转服务令牌
+10. `closeType` (String): 窗口关闭行为 (tray 或 quit)
     - 最小化到托盘 `tray`
     - 退出程序 `quit`
-9. `pluginVersion` (String): vue-plugin-hiprint 插件版本
-10. `logPath` (String): 日志路径
-11. `pdfPath` (String): 临时文件路径
-12. `defaultPrinter` (String): 默认打印机
-13. `disabledGpu` (Boolean): 禁用 GPU 加速，可解决部分设备打印模糊问题，默认 `false`
-14. `rePrint` (Boolean): 是否允许重打默认 `true` （隐式设置）
+11. `pluginVersion` (String): vue-plugin-hiprint 插件版本
+12. `logPath` (String): 日志路径
+13. `pdfPath` (String): 临时文件路径
+14. `defaultPrinter` (String): 默认打印机
+15. `disabledGpu` (Boolean): 禁用 GPU 加速，可解决部分设备打印模糊问题，默认 `false`
+16. `rePrint` (Boolean): 是否允许重打默认 `true` （隐式设置）
 
 ### 覆盖默认配置方法
 
@@ -197,14 +199,16 @@ npm run build-w-64
       ```js
       // clientInfo
       {
-        arch: "x64",
-        clientUrl: "http://192.168.0.2:17521",
-        ip: "192.168.0.2",
-        ipv6: "fe80::13f:eb0f:e426:7c92",
-        mac: "a1:a2:a3:a4:a5:a6",
-        machineId: "12c90ff9-b9f4-4178-9099-9dd326b70c2e",
-        platform: "win32",
-        version: "1.0.7",
+        "hostname": "Admin", // 主机名
+        "version": "1.0.12-beta9", // 客户端版本
+        "platform": "win32", // 平台类型
+        "arch": "x64", // 系统架构
+        "mac": "d0:46:0c:97:4b:68", // mac 地址
+        "ip": "192.168.0.114", // 设备 ip
+        "ipv6": "fe80::2157:4b26:1c2f:c4ca", // 设备 ipv6
+        "clientUrl": "http://192.168.0.114:17521", // 本地服务地址
+        "machineId": "0e8b222e-517b-491e-883a-b6283a62e280", // 设备唯一 ID
+        "nickName": "打印客户端", // 友好昵称
       }
 
       // printerList
@@ -251,13 +255,16 @@ npm run build-w-64
       // clients
       {
         "AlBaUCNs3AIMFPLZAAAh": {
-          arch: "x64",
-          clientUrl: "http://192.168.0.2:17521",
-          ip: "192.168.0.2",
-          ipv6: "fe80::13f:eb0f:e426:7c92",
-          mac: "a1:a2:a3:a4:a5:a6",
-          machineId: "12c90ff9-b9f4-4178-9099-9dd326b70c2e",
-          platform: "win32",
+          "hostname": "Admin", // 主机名
+          "version": "1.0.12-beta9", // 客户端版本
+          "platform": "win32", // 平台类型
+          "arch": "x64", // 系统架构
+          "mac": "d0:46:0c:97:4b:68", // mac 地址
+          "ip": "192.168.0.114", // 设备 ip
+          "ipv6": "fe80::2157:4b26:1c2f:c4ca", // 设备 ipv6
+          "clientUrl": "http://192.168.0.114:17521", // 本地服务地址
+          "machineId": "0e8b222e-517b-491e-883a-b6283a62e280", // 设备唯一 ID
+          "nickName": "打印客户端", // 友好昵称
           printerList: [{
             description: "",
             displayName: "Microsoft Print to PDF",
