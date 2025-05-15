@@ -1,5 +1,7 @@
 # electron-hiprint
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/CcSimple/electron-hiprint)
+
 <div align="center">
 
 ![logo](./build/icons/100x100.png)
