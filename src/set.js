@@ -109,7 +109,8 @@ function setConfig(event, data) {
     .showMessageBox(SET_WINDOW, {
       type: "question",
       title: "提示",
-      message: "修改设置后需要立即重启，继续操作？",
+      message:
+        "保存设置需要重启软件，如有正在执行中的打印任务可能会被中断，是否确定要保存并重启？",
       buttons: ["确定", "取消"],
     })
     .then((res) => {
@@ -121,7 +122,7 @@ function setConfig(event, data) {
           dialog.showMessageBox(SET_WINDOW, {
             type: "error",
             title: "提示",
-            message: "pdf 保存路径无法写入，请重新设置！",
+            message: "pdf 保存路径无法写入数据，请重新设置！",
             buttons: ["确定"],
           });
           return;
@@ -133,7 +134,18 @@ function setConfig(event, data) {
           dialog.showMessageBox(SET_WINDOW, {
             type: "error",
             title: "提示",
-            message: "pdf 保存路径无法写入，请重新设置！",
+            message: "pdf 保存路径无法写入数据，请重新设置！",
+            buttons: ["确定"],
+          });
+          return;
+        }
+        try {
+          fs.accessSync(data.logPath, fs.constants.W_OK);
+        } catch (err) {
+          dialog.showMessageBox(SET_WINDOW, {
+            type: "error",
+            title: "提示",
+            message: "日志保存路径无法写入数据，请重新设置！",
             buttons: ["确定"],
           });
           return;
