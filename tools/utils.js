@@ -688,7 +688,7 @@ function initClientEvent() {
         data.socketId = client.id;
         data.taskId = uuidv7();
         data.clientType = "transit";
-        RENDER_WINDOW.webContents.send("print", data);
+        RENDER_WINDOW.webContents.send("png", data);
         RENDER_RUNNER_DONE[data.taskId] = done;
       });
     }
@@ -700,7 +700,7 @@ function initClientEvent() {
         data.socketId = client.id;
         data.taskId = uuidv7();
         data.clientType = "transit";
-        RENDER_WINDOW.webContents.send("print", data);
+        RENDER_WINDOW.webContents.send("pdf", data);
         RENDER_RUNNER_DONE[data.taskId] = done;
       });
     }
