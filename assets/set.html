@@ -79,6 +79,12 @@
                 :prop="item.prop"
                 :style="item.style"
               >
+                <template #label>
+                  <el-tooltip v-if="item.tips" :content="item.tips" placement="top-start">
+                    <span>{{item.label}} <i class="el-icon-question"></i></span>
+                  </el-tooltip>
+                  <span v-else>{{item.label}}</span>
+                </template>
                 <component
                   v-if="item.optionIs"
                   :is="item.is"
@@ -177,13 +183,13 @@
               closeType: "tray",
               logPath: "",
               pdfPath: "",
-              defaultPrinter:""
+              defaultPrinter: "",
             },
             // 预制的版本，解决部分内网无法获取新版本的问题
             versions: [
               {
-                value: "0.0.58-fix",
-                info: "2024/11/03 21:23:54",
+                value: "0.0.60",
+                info: "2025/03/24 17:25:24",
               },
               {
                 value: "0.0.56",
@@ -199,7 +205,7 @@
               },
             ],
             downloadedVersions: [], // 存储已下载版本
-            printerList:[] // 打印机列表
+            printerList: [], // 打印机列表
           };
         },
         computed: {
@@ -256,14 +262,15 @@
                   attrs: {
                     placeholder: "请输入便于识别的别名",
                   },
-                  display:
-                    this.setTab === "basicSet",
+                  tips: "方便识别的友好名称",
+                  display: this.setTab === "basicSet",
                 },
                 {
                   label: "插件版本设置",
                   prop: "pluginVersion",
                   is: "el-select",
                   optionIs: "el-option",
+                  tips: "Render api 使用的渲染版本",
                   attrs: {
                     filterable: true,
                     defaultFirstOption: true,
@@ -328,6 +335,7 @@
                   label: "日志路径",
                   prop: "logPath",
                   is: "el-input",
+                  tips: "程序运行时产生的日志路径",
                   attrs: {
                     readonly: true,
                   },
@@ -340,7 +348,7 @@
                   display: this.setTab === "basicSet",
                 },
                 {
-                  label: "选择路径",
+                  label: "　",　// 全角空格占位，防止样式坍塌　
                   is: "el-button",
                   event: {
                     click: () => {
@@ -355,6 +363,7 @@
                   label: "PDF 缓存路径",
                   prop: "pdfPath",
                   is: "el-input",
+                  tips: "系统运行过程中的临时 PDF 存储路径",
                   attrs: {
                     readonly: true,
                   },
@@ -370,7 +379,7 @@
                   display: this.setTab === "basicSet",
                 },
                 {
-                  label: "选择路径",
+                  label: "　",　// 全角空格占位，防止样式坍塌
                   is: "el-button",
                   event: {
                     click: () => {
@@ -385,9 +394,10 @@
                   display: this.setTab === "basicSet",
                 },
                 {
-                  label: "连接中转服务(node-hiprint-transit)",
+                  label: "连接中转代理服务(node-hiprint-transit)",
                   prop: "connectTransit",
                   is: "el-switch",
+                  tips: "通过中转代理可以实现云打印，摆脱局域网限制",
                   event: {
                     change: () => this.handleTabChange(),
                   },
@@ -433,22 +443,23 @@
                   ],
                 },
                 {
-                  label: "连通性测试",
+                  label: "　",　// 全角空格占位，防止样式坍塌
                   prop: "connectTest",
                   is: "el-button",
                   event: {
                     click: this.handleTest,
                   },
-                  content: "测试",
+                  content: "测试连接",
                   span: 6,
                   display:
                     this.setTab === "transitSet" &&
                     this.formData.connectTransit,
                 },
                 {
-                  label: "开机启动(请注意杀毒软件拦截)",
+                  label: "开机启动",
                   prop: "openAtLogin",
                   is: "el-switch",
+                  tips: "请注意杀毒软件拦截",
                   span: 12,
                   display: this.setTab === "advancedSet",
                 },
@@ -456,6 +467,7 @@
                   label: "静默启动",
                   prop: "openAsHidden",
                   is: "el-switch",
+                  tips: "启动后不显示主窗口，收起到托盘",
                   span: 12,
                   display: this.setTab === "advancedSet",
                 },
@@ -463,17 +475,19 @@
                   label: "默认打印机",
                   prop: "defaultPrinter",
                   is: "el-select",
+                  tips: "打印任务未指定打印机时将优先使用该打印机",
                   optionIs: "el-option",
                   attrs: {
-                    clearable:true,
+                    clearable: true,
                   },
                   options: this.printerList,
                   display: this.setTab === "advancedSet",
                 },
                 {
-                  label: "禁用GPU(优化字体模糊问题)",
+                  label: "禁用GPU",
                   prop: "disabledGpu",
                   is: "el-switch",
+                  tips: "可能优化字体模糊问题",
                   span: 12,
                   display: this.setTab === "advancedSet",
                 },
@@ -496,7 +510,7 @@
                       content: "最小化到托盘",
                       style: {
                         marginRight: "6px",
-                      }
+                      },
                     },
                     {
                       label: "quit",
@@ -504,7 +518,7 @@
                       content: "退出程序",
                       style: {
                         marginLeft: "6px",
-                      }
+                      },
                     },
                   ],
                   display: this.setTab === "advancedSet",
@@ -537,12 +551,12 @@
         },
         methods: {
           onEvents() {
-              ipcRenderer.on("downloadedVersions", (event, versions) => {
+            ipcRenderer.on("downloadedVersions", (event, versions) => {
               this.downloadedVersions = versions;
-            })
-              ipcRenderer.on("getPrintersList", (event, printers) => {
+            });
+            ipcRenderer.on("getPrintersList", (event, printers) => {
               this.printerList = printers;
-            })
+            });
           },
           handleTabChange() {
             this.$nextTick(() => {
@@ -582,7 +596,7 @@
             const title = {
               logPath: "选择日志存储路径",
               pdfPath: "选择 PDF 缓存路径",
-            }[type]
+            }[type];
             ipc.send("showOpenDialog", {
               title,
               defaultPath: this.formData[type],
@@ -659,10 +673,10 @@
           /**
            * @description: 获取打印机列表
            * @return {void}
-          */
+           */
           getPrintersList() {
             ipcRenderer.send("getPrintersList"); // 请求打印机列表
-          }
+          },
         },
       });
 
