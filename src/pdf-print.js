@@ -37,7 +37,7 @@ const realPrint = (pdfPath, printer, data, resolve, reject) => {
     // 参数见 node_modules/pdf-to-printer/dist/print/print.d.ts
     // pdf打印文档：https://www.sumatrapdfreader.org/docs/Command-line-arguments
     // pdf-to-printer 源码: https://github.com/artiebits/pdf-to-printer
-    let pdfOptions = Object.assign(data, { pageSize: data.paperName });
+    let pdfOptions = Object.assign(data, { paperSize: data.paperName });
     printPdfFunction(pdfPath, pdfOptions)
       .then(() => {
         resolve();
@@ -86,6 +86,7 @@ const printPdf = (pdfPath, printer, data) => {
           })
           .on("error", (err) => {
             console.log("download pdf error:" + err.message);
+            reject(error);
           });
         return;
       }
