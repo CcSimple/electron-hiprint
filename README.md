@@ -477,7 +477,7 @@ eg: {height: 80 _ 1000, width: 60 _ 1000}
     monochrome?: boolean; // 黑白打印 true、false
     side?: string; // 单双面 duplex, duplexshort, duplexlong, and simplex
     bin?: string; // select tray to print to
-    paperSize?: string; // 纸张大小 A2, A3, A4, A5, A6, letter, legal, tabloid, statement
+    paperName?: string; // 纸张大小 A2, A3, A4, A5, A6, letter, legal, tabloid, statement
     silent?: boolean; // Silences error messages.
     printDialog?: boolean; // 显示打印对话框 true、false
     copies?: number; // 打印份数
