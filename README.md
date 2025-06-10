@@ -462,9 +462,7 @@ if (globalThis.connect) {
 
 > 传数据时需要传入: { type:'pdf' }
 
-> 如果是自定义的纸张大小, 别忘了传自定义的 pageSize
-
-eg: {height: 80 _ 1000, width: 60 _ 1000}
+> 如果是自定义的纸张大小, 别忘了传自定义的 paperName (纸张名称)
 
 ```js
 {
