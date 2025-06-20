@@ -1,0 +1,200 @@
+name: Release Build
+
+on:
+  push:
+    # 仅匹配 1.2.3 或 1.2.3-beta1 这样的 tag，例如 1.0.0、2.3.4-beta2
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-beta[0-9]+"
+
+permissions: write-all
+
+concurrency:
+  group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+jobs:
+  check-version:
+    name: 校验版本号
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v3
+
+      - name: 校验 package.json version 与 tag 一致
+        run: |
+          TAG_NAME="${GITHUB_REF##refs/tags/}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [[ "$PKG_VERSION" != "$TAG_NAME" ]]; then
+            echo "❌ package.json 里的 version ($PKG_VERSION) 和 tag ($TAG_NAME) 不一致，终止执行。"
+            exit 1
+          else
+            echo "✅ package.json 里的 version 和 tag ($TAG_NAME) 一致，继续执行。"
+          fi
+
+
+  build-win:
+    name: Windows 打包
+    runs-on: windows-latest
+    needs: check-version
+    outputs:
+      artifacts-path: ${{ steps.set-artifacts-path.outputs.result }}
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v3
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 安装依赖
+        run: npm install
+
+      - name: 打包 Windows 32位
+        run: npm run build-w
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: 打包 Windows 64位
+        run: npm run build-w-64
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: 设置产物路径
+        id: set-artifacts-path
+        run: echo "result=out" >> $GITHUB_OUTPUT
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-builds
+          path: out/*.exe
+
+  build-mac:
+    name: macOS 打包
+    runs-on: macos-latest
+    needs: check-version
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v3
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 安装依赖
+        run: npm install
+
+      - name: 打包 macOS x64
+        run: npm run build-m
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: 打包 macOS arm64
+        run: npm run build-m-arm64
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: 打包 macOS Universal
+        run: npm run build-m-universal
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-builds
+          path: out/*.dmg
+
+  build-linux:
+    name: Linux 打包
+    runs-on: ubuntu-latest
+    needs: check-version
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v3
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 安装依赖
+        run: npm install
+
+      - name: 打包 Linux x64
+        run: npm run build-l
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: 打包 Linux arm64
+        run: npm run build-l-arm64
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-builds
+          path: |
+            out/*.tar.xz
+            out/*.deb
+
+
+  release:
+    name: 自动发布 Release
+    needs: [build-win, build-mac, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v3
+
+      # 下载各平台构建产物
+      - name: 下载 Windows 产物
+        uses: actions/download-artifact@v4
+        with:
+          name: win-builds
+          path: artifacts/win
+
+      - name: 下载 macOS 产物
+        uses: actions/download-artifact@v4
+        with:
+          name: mac-builds
+          path: artifacts/mac
+
+      - name: 下载 Linux 产物
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-builds
+          path: artifacts/linux
+
+      # 自动生成 Release Notes（使用 tag 相关 commit 信息）
+      - name: 生成 Release Notes
+        id: changelog
+        run: |
+          TAG_NAME="${GITHUB_REF##refs/tags/}"
+          PREV_TAG=$(git tag --sort=-creatordate | grep -B1 "^${TAG_NAME}$" | head -n1)
+          if [ -z "$PREV_TAG" ]; then
+            git log -1 --pretty=format:"%h %s" "$TAG_NAME" > release_notes.txt
+          else
+            git log "$PREV_TAG..$TAG_NAME" --pretty=format:"- %h %s" > release_notes.txt
+          fi
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          cat release_notes.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: 发布 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.release_notes }}
+          files: |
+            artifacts/win/**
+            artifacts/mac/**
+            artifacts/linux/**
+          prerelease: ${{ contains(github.ref_name, 'beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

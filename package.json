@@ -1,6 +1,6 @@
 {
   "name": "electron-hiprint",
-  "version": "1.0.12-beta10",
+  "version": "1.0.13",
   "description": "vue-plugin-hiprint client",
   "main": "main.js",
   "author": "CcSimple<840054486@qq.com>",
@@ -77,7 +77,8 @@
       "icon": "./build/icons/256x256.png",
       "artifactName": "${productName}-${version}.${ext}",
       "target": [
-        "tar.xz"
+        "tar.xz",
+        "deb"
       ]
     },
     "protocols": [
@@ -87,7 +88,8 @@
           "hiprint"
         ]
       }
-    ]
+    ],
+    "publish": null
   },
   "dependencies": {
     "address": "^1.2.0",
