@@ -86,7 +86,7 @@ const printPdf = (pdfPath, printer, data) => {
           })
           .on("error", (err) => {
             console.log("download pdf error:" + err.message);
-            reject(error);
+            reject(err);
           });
         return;
       }
