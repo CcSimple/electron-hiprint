@@ -75,7 +75,8 @@ const printPdf = (pdfPath, printer, data) => {
               "url_pdf",
               dayjs().format(`YYYY_MM_DD HH_mm_ss_`) + `${uuidv7()}.pdf`,
             );
-
+            // 确保目录存在
+            fs.mkdirSync(path.dirname(toSavePath), { recursive: true });
             const file = fs.createWriteStream(toSavePath);
             res.pipe(file);
             file.on("finish", () => {
