@@ -10,10 +10,7 @@
     <meta charset="UTF-8" />
     <title>Electron-hiprint</title>
     <link rel="stylesheet" href="./css/style.css" />
-    <link
-      rel="stylesheet"
-      href="./element-ui/index.css"
-    />
+    <link rel="stylesheet" href="./element-ui/index.css" />
     <script src="./js/vue.min.js"></script>
     <script src="./element-ui/index.js"></script>
   </head>
@@ -31,13 +28,24 @@
       <div class="container">
         <div class="info">
           <div class="title">
-            打印服务已启动<i class="el-icon-setting seticon" @click="openSetting"></i>
+            打印服务已启动
+            <i
+              class="el-icon-view privateIcon"
+              :class="{ hidden: !displayPrivate }"
+              :title="displayPrivate ? '隐藏重要数据' : '显示重要数据'"
+              @click="handleTriggerView"
+            ></i>
+            <i
+              class="el-icon-setting setIcon"
+              title="进入设置"
+              @click="openSetting"
+            ></i>
+          </div>
+          <div class="message row ipAddress">
+            服务地址：<span data-prop="ipAddress" @click="handleCopy">{{ privateData(ipAddress) }}</span>
           </div>
           <div class="message row">
-            服务地址：<span @click="handleCopy">{{ ipAddress }}</span>
-          </div>
-          <div class="message row">
-            MAC地址：<span @click="handleCopy">{{ macAddress }}</span>
+            MAC地址：<span data-prop="macAddress" @click="handleCopy">{{ privateData(macAddress) }}</span>
           </div>
         </div>
         <div class="status">
@@ -53,7 +61,9 @@
           <div class="message">
             打印状态：<span>{{ printing ? "文档打印中" : "空闲" }}</span>
           </div>
-          <div class="message row">设备编号：<span @click="handleCopy">{{ deviceId }}</span></div>
+          <div class="message row">
+            设备编号：<span data-prop="deviceId" @click="handleCopy">{{ privateData(deviceId) }}</span>
+          </div>
           <div class="message">
             插件版本：{{ pluginVersion }}
           </div>
@@ -84,7 +94,8 @@
             socketActiveNum: 0,
             printing: false,
             pluginVersion: store.get("pluginVersion") || "未指定",
-            version
+            displayPrivate: true,
+            version,
           };
         },
         created() {
@@ -107,12 +118,18 @@
           openSetting() {
             ipc.send("openSetting");
           },
+          handleTriggerView() {
+            this.displayPrivate = !this.displayPrivate;
+          },
           handleCopy(event) {
-            clipboard.writeText(event.target.innerText);
+            clipboard.writeText(this[event.target.dataset.prop]);
             ipc.send("notification", {
               title: "复制成功",
               body: "文本已成功复制到剪贴板中！",
             });
+          },
+          privateData(data) {
+            return this.displayPrivate ? data.replace(/[a-zA-Z0-9]/g, "*") : data
           },
           socketActive(evnet, arg) {
             this.socketActiveNum = arg;

@@ -93,18 +93,30 @@ body {
   align-items: center;
 }
 
-.seticon {
-  display: none!important;
+.privateIcon,
+.setIcon {
+  position: relative;
   cursor: pointer;
   font-size: 32px;
   line-height: 50px;
   margin-left: 10px;
+}
+
+.privateIcon.hidden::after {
+  position: absolute;
+  content: "/";
+  left: calc(50% - 8px);
+}
+
+.setIcon {
+  display: none !important;
   animation: rotatiing 2s linear infinite;
   -webkit-animation: rotatiing 2s linear infinite;
 }
 
-.title:hover>.seticon {
-  display: inline-block!important;
+.title:hover > .setIcon,
+.title:hover > .privateIcon {
+  display: inline-block !important;
 }
 
 .message {
@@ -115,6 +127,10 @@ body {
 .row {
   width: 100%;
   flex: unset;
+}
+
+.ipAddress {
+    font-size: 18px;
 }
 
 @keyframes rotatiing {
