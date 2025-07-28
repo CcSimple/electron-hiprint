@@ -27,8 +27,9 @@ const {
   address,
   initServeEvent,
   initClientEvent,
+  getMachineId,
 } = require("./tools/utils");
-const { machineIdSync } = require("node-machine-id");
+
 const TaskRunner = require("concurrent-tasks");
 
 if (store.get("disabledGpu")) {
@@ -130,12 +131,8 @@ async function initialize() {
 
   // 获取设备唯一id
   ipcMain.on("getMachineId", (event) => {
-    try {
-      const machineId = machineIdSync({ original: true });
-      event.sender.send("machineId", machineId);
-    } catch (error) {
-      event.sender.send("machineId", "");
-    }
+    const machineId = getMachineId();
+    event.sender.send("machineId", machineId);
   });
 
   // 获取设备ip、mac等信息
@@ -172,7 +169,7 @@ async function createWindow() {
     title: store.get("mainTitle") || "Electron-hiprint",
     useContentSize: true, // 窗口大小不包含边框
     center: true, // 居中
-    resizable: false, // 不可缩放
+    resizable: true, // 是否可缩放
     show: store.get("openAsHidden") ? false : true, // 显示
     webPreferences: {
       // 设置此项为false后，才可在渲染进程中使用 electron api

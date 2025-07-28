@@ -152,6 +152,20 @@ const watchTaskInstance = generateWatchTask(
 )();
 
 /**
+ * @description: 尝试获取客户端唯一id，依赖管理员权限与注册表读取
+ * @return {string}
+ */
+function getMachineId(){
+  try {    
+    return machineIdSync({ original: true });
+  } catch (error) {
+    // 若获取失败，也可以使用 UUID 代替，需要单独存储 首次创建 后续读取
+    // 默认返回空 表示读不到就好
+    return "";
+  }
+}
+
+/**
  * @description: 抛出当前客户端信息，提供更多有价值的信息，逐步替换原有 address
  * @param {io.Socket} socket
  * @return {void}
@@ -167,7 +181,7 @@ function emitClientInfo(socket) {
       ip: _address.ip(), // ip 地址
       ipv6: _address.ipv6(), // ipv6 地址
       clientUrl: `http://${_address.ip()}:${store.get("port") || 17521}`, // 客户端地址
-      machineId: machineIdSync({ original: true }), // 客户端唯一id
+      machineId: getMachineId(), // 客户端唯一id
       nickName: store.get("nickName"), // 客户端昵称
     });
   });
@@ -720,4 +734,5 @@ module.exports = {
   address: _address,
   initServeEvent,
   initClientEvent,
+  getMachineId,
 };
