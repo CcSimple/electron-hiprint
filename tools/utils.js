@@ -722,10 +722,13 @@ function initClientEvent() {
 */
 
 function getCurrentPrintStatusByName(printerName) {
-  const { StatusMsg } = getPaperSizeInfoAll().find((item) => item.PrinterName === printerName) || { StatusMsg : "未找到打印机" };
-  return {
-    StatusMsg,
+   if (process.platform === "win32") {
+    const { StatusMsg } = getPaperSizeInfoAll().find((item) => item.PrinterName === printerName) || { StatusMsg : "未找到打印机" };
+    return {
+      StatusMsg,
+    }
   }
+  return { StatusMsg : "非Windows系统, 暂不支持" }
 }
 
 
