@@ -731,8 +731,8 @@ function initClientEvent() {
 
 /**
  * @description: 打印机状态码 十进制 -> 十六进制, 返回对应的详细错误信息， 详见：https://github.com/mlmdflr/win32-pdf-printer/blob/51f7a9b3687e260a7d83ea467b22b374fb153b52/paper-size-info/Status.cs
- * @param {Number} code 十进制状态码
- * @return { String } 打印机详情信息
+ * @param { String } printerName  打印机名称
+ * @return { Object  { StatusMsg: String // 打印机状态详情信息 } }  
 */
 
 function getCurrentPrintStatusByName(printerName) {
