@@ -81,7 +81,7 @@ const printPdf = (pdfPath, printer, data) => {
             res.pipe(file);
             file.on("finish", () => {
               file.close();
-              console.log("file downloaded:" + toSavePath);
+              // console.log("file downloaded:" + toSavePath);
               realPrint(toSavePath, printer, data, resolve, reject);
             });
           })
