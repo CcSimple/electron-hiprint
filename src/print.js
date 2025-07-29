@@ -78,13 +78,11 @@ function initPrintEvent() {
         // cups: https://www.cups.org/doc/cupspm.html#ipp_status_e
         if (process.platform === "win32") {
           if (element.status != 0) {
-            log(`打印机异常码:${element.status}`);
             printerError = true;
           }
         } else {
           if (element.status != 3) {
             printerError = true;
-            log(`打印机异常码:${element.status}`);
           }
         }
         havePrinter = true;
@@ -224,7 +222,7 @@ function initPrintEvent() {
           );
           if (socket) {
             checkPrinterStatus(deviceName, () => {
-               const result = {
+              const result = {
                 msg: "打印成功",
                 templateId: data.templateId,
                 replyId: data.replyId,
@@ -331,23 +329,25 @@ function initPrintEvent() {
   });
 }
 
-
 function checkPrinterStatus(deviceName, callback) {
   const intervalId = setInterval(() => {
-    PRINT_WINDOW.webContents.getPrintersAsync().then((printers) => {
-      const printer = printers.find((printer) => printer.name === deviceName);
-      log(`current printer: ${JSON.stringify(printer)}`);
-      const ISCAN_STATUS = process.platform === "win32" ? 0 : 3;
-      if (printer && printer.status === ISCAN_STATUS) {
-        callback && callback();
-        clearInterval(intervalId); // Stop polling when status is 0
-        log(`Printer ${deviceName} is now ready (status: ${ISCAN_STATUS})`);
-        // You can add any additional logic here for when the printer is ready
-      }
-    }).catch((error) => {
-      clearInterval(intervalId); // Also clear interval on error
-      log(`Error checking printer status: ${error}`);
-    });
+    PRINT_WINDOW.webContents
+      .getPrintersAsync()
+      .then((printers) => {
+        const printer = printers.find((printer) => printer.name === deviceName);
+        log(`current printer: ${JSON.stringify(printer)}`);
+        const ISCAN_STATUS = process.platform === "win32" ? 0 : 3;
+        if (printer && printer.status === ISCAN_STATUS) {
+          callback && callback();
+          clearInterval(intervalId); // Stop polling when status is 0
+          log(`Printer ${deviceName} is now ready (status: ${ISCAN_STATUS})`);
+          // You can add any additional logic here for when the printer is ready
+        }
+      })
+      .catch((error) => {
+        clearInterval(intervalId); // Also clear interval on error
+        log(`Error checking printer status: ${error}`);
+      });
   }, 1000); // Check every 1 second (adjust interval as needed)
 
   return intervalId; // Return the interval ID in case you need to cancel it externally
