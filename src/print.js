@@ -222,13 +222,15 @@ function initPrintEvent() {
             }`,
           );
           if (socket) {
-            const result = {
-              msg: "打印成功",
-              templateId: data.templateId,
-              replyId: data.replyId,
-            };
-            socket.emit("successs", result); // 兼容 vue-plugin-hiprint 0.0.56 之前包
-            socket.emit("success", result);
+            checkPrinterStatus(deviceName, () => {
+              const result = {
+                msg: "打印成功",
+                templateId: data.templateId,
+                replyId: data.replyId,
+              };
+              socket.emit("successs", result); // 兼容 vue-plugin-hiprint 0.0.56 之前包
+              socket.emit("success", result);
+            });
           }
           logPrintResult("success");
         })
@@ -259,7 +261,6 @@ function initPrintEvent() {
         });
       return;
     }
-
     // 打印 详见https://www.electronjs.org/zh/docs/latest/api/web-contents
     PRINT_WINDOW.webContents.print(
       {
@@ -327,6 +328,30 @@ function initPrintEvent() {
       },
     );
   });
+}
+
+function checkPrinterStatus(deviceName, callback) {
+  const intervalId = setInterval(() => {
+    PRINT_WINDOW.webContents
+      .getPrintersAsync()
+      .then((printers) => {
+        const printer = printers.find((printer) => printer.name === deviceName);
+        log(`current printer: ${JSON.stringify(printer)}`);
+        const ISCAN_STATUS = process.platform === "win32" ? 0 : 3;
+        if (printer && printer.status === ISCAN_STATUS) {
+          callback && callback();
+          clearInterval(intervalId); // Stop polling when status is 0
+          log(`Printer ${deviceName} is now ready (status: ${ISCAN_STATUS})`);
+          // You can add any additional logic here for when the printer is ready
+        }
+      })
+      .catch((error) => {
+        clearInterval(intervalId); // Also clear interval on error
+        log(`Error checking printer status: ${error}`);
+      });
+  }, 1000); // Check every 1 second (adjust interval as needed)
+
+  return intervalId; // Return the interval ID in case you need to cancel it externally
 }
 
 module.exports = async () => {

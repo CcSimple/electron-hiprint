@@ -11,6 +11,7 @@ const pdfPrint2 = require("unix-print");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
+const log = require("../tools/log");
 const { store } = require("../tools/utils");
 const dayjs = require("dayjs");
 const { v7: uuidv7 } = require("uuid");
@@ -33,7 +34,7 @@ const realPrint = (pdfPath, printer, data, resolve, reject) => {
   if (process.platform === "win32") {
     data = Object.assign({}, data);
     data.printer = printer;
-    console.log("print pdf:", pdfPath, JSON.stringify(data));
+    log("print pdf:" + pdfPath + JSON.stringify(data));
     // 参数见 node_modules/pdf-to-printer/dist/print/print.d.ts
     // pdf打印文档：https://www.sumatrapdfreader.org/docs/Command-line-arguments
     // pdf-to-printer 源码: https://github.com/artiebits/pdf-to-printer
@@ -81,19 +82,19 @@ const printPdf = (pdfPath, printer, data) => {
             res.pipe(file);
             file.on("finish", () => {
               file.close();
-              console.log("file downloaded:" + toSavePath);
+              log("file downloaded:" + toSavePath);
               realPrint(toSavePath, printer, data, resolve, reject);
             });
           })
           .on("error", (err) => {
-            console.log("download pdf error:" + err.message);
+            log("download pdf error:" + err?.message);
             reject(err);
           });
         return;
       }
       realPrint(pdfPath, printer, data, resolve, reject);
     } catch (error) {
-      console.log("print error:" + error);
+      log("print error:" + error?.message);
       reject(error);
     }
   });
