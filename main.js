@@ -169,7 +169,7 @@ async function createWindow() {
     title: store.get("mainTitle") || "Electron-hiprint",
     useContentSize: true, // 窗口大小不包含边框
     center: true, // 居中
-    resizable: true, // 是否可缩放
+    resizable: false, // 禁止窗口缩放
     show: store.get("openAsHidden") ? false : true, // 显示
     webPreferences: {
       // 设置此项为false后，才可在渲染进程中使用 electron api
