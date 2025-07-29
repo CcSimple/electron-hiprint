@@ -6,7 +6,7 @@ const os = require("os");
 const fs = require("fs");
 const printPdf = require("./pdf-print");
 const log = require("../tools/log");
-const { store } = require("../tools/utils");
+const { store, getCurrentPrintStatusByName } = require("../tools/utils");
 const db = require("../tools/database");
 const dayjs = require("dayjs");
 const { v7: uuidv7 } = require("uuid");
@@ -89,10 +89,11 @@ function initPrintEvent() {
       }
     });
     if (printerError) {
+      const { StatusMsg } = getCurrentPrintStatusByName(defaultPrinter);
       log(
         `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
           data.templateId
-        }】 打印失败，打印机异常，打印机：${data.printer}`,
+        }】 打印失败，打印机异常，打印机：${defaultPrinter}, 打印机状态：${StatusMsg}`,
       );
       socket &&
         socket.emit("error", {
