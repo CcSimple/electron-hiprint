@@ -73,25 +73,28 @@ function initPrintEvent() {
       }
       // 判断打印机是否存在
       if (element.name === defaultPrinter) {
+        havePrinter = true;
+
+        // 没有status属性时放行（可能是虚拟打印机）
+        if (!element.hasOwnProperty('status')) {
+          return;
+        }
+
         // todo: 打印机状态对照表
         // win32: https://learn.microsoft.com/en-us/windows/win32/printdocs/printer-info-2
         // cups: https://www.cups.org/doc/cupspm.html#ipp_status_e
-        if (process.platform === "win32") {
-          if (element.status != 0) {
-            printerError = true;
-          }
-        } else {
-          if (element.status != 3) {
-            printerError = true;
-          }
+        const isWin32Error = process.platform === "win32" && element.status !== 0;
+        const isOtherPlatformError = process.platform !== "win32" && element.status !== 3;
+
+        if (isWin32Error || isOtherPlatformError) {
+          printerError = true;
         }
-        havePrinter = true;
       }
     });
     if (printerError) {
       const { StatusMsg } = getCurrentPrintStatusByName(defaultPrinter);
       log(
-        `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
+        `${data.replyId ? "中转服务" : "插件端"} ${socket?.id} 模板 【${
           data.templateId
         }】 打印失败，打印机异常，打印机：${defaultPrinter}, 打印机状态：${StatusMsg}`,
       );
@@ -236,7 +239,7 @@ function initPrintEvent() {
         })
         .catch((err) => {
           log(
-            `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
+            `${data.replyId ? "中转服务" : "插件端"} ${socket?.id} 模板 【${
               data.templateId
             }】 打印失败，打印类型：URL_PDF，打印机：${deviceName}，原因：${
               err.message
