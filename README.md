@@ -107,29 +107,32 @@ npm run build-w-64
 
 ### 配置项说明
 
-1. `mainTitle` (String): 主标题（隐式设置）
-2. `nickName` (String): 可设置的便于识别的友好设备名称
-3. `openAtLogin` (Boolean): 系统登录时启动
-4. `openAsHidden` (Boolean): 启动时隐藏窗口
-5. `connectTransit` (Boolean): 连接中转服务
-6. `port` (String | Number) ( 10000 - 65535 ) 端口号默认为 `17521`
-7. `token` String( \* | null ) 身份验证令牌，支持固定 Token
-   - [vue-plugin-hiprint](https://github.com/CcSimple/vue-plugin-hiprint.git) 需要使用 [0.0.55](https://www.npmjs.com/package/vue-plugin-hiprint?activeTab=versions) 之后的版本
-8. `transitUrl` (String): 中转服务地址
-9. `transitToken` (String): 中转服务令牌
-10. `closeType` (String): 窗口关闭行为 (tray 或 quit)
-    - 最小化到托盘 `tray`
-    - 退出程序 `quit`
-11. `pluginVersion` (String): vue-plugin-hiprint 插件版本
-12. `logPath` (String): 日志路径
-13. `pdfPath` (String): 临时文件路径
-14. `defaultPrinter` (String): 默认打印机
-15. `disabledGpu` (Boolean): 禁用 GPU 加速，可解决部分设备打印模糊问题，默认 `false`
-16. `rePrint` (Boolean): 是否允许重打默认 `true` （隐式设置）
+| 序号 | 字段名                 | 类型             | 说明                                                  |
+| ---- | ---------------------- | ---------------- | ----------------------------------------------------- |
+| 1    | mainTitle[[1]](#tips1) | String           | 主标题                                                |
+| 2    | nickName               | String           | 可设置的便于识别的友好设备名称                        |
+| 3    | openAtLogin            | Boolean          | 系统登录时启动                                        |
+| 4    | openAsHidden           | Boolean          | 启动时隐藏窗口                                        |
+| 5    | connectTransit         | Boolean          | 连接中转服务                                          |
+| 6    | port                   | String \| Number | 端口号（10000 - 65535），默认为 17521                 |
+| 7    | token[[2]](#tips2)     | String \| null   | 身份验证令牌，支持固定 Token                          |
+| 8    | transitUrl             | String           | 中转服务地址                                          |
+| 9    | transitToken           | String           | 中转服务令牌                                          |
+| 10   | closeType              | String           | 窗口关闭行为（tray 或 quit）                          |
+| 11   | pluginVersion          | String           | vue-plugin-hiprint 插件版本                           |
+| 12   | logPath                | String           | 日志路径                                              |
+| 13   | pdfPath                | String           | 临时文件路径                                          |
+| 14   | defaultPrinter         | String           | 默认打印机                                            |
+| 15   | disabledGpu            | Boolean          | 禁用 GPU 加速，可解决部分设备打印模糊问题，默认 false |
+| 16   | rePrint[[1]](#tips1)   | Boolean          | 是否允许重打，默认 true                               |
+
+> <span id="tips1">[1]</span> `mainTitle` 和 `rePrint` 字段在设置页面中未显式提供设置，方便各位可以在不修改源码二开的情况下通过配置快速实现定制化和高级功能，且不易被客户篡改，详见下方[覆盖默认配置方法](#覆盖默认配置方法)。
+
+> <span id="tips2">[2]</span> `vue-plugin-hiprint` 需要使用 ^0.0.55 版本才可使用 `token` 否则请勿设置 `token`。
 
 ### 覆盖默认配置方法
 
-1. 二开项目，直接修改 [项目源码](./tools/utils.js) 并重新打包
+1. 二开项目，直接修改 [项目源码 /tools/utils.js](./tools/utils.js) 并重新打包
 2. win `v1.0.12-beta6` 后续版本可在 `exe` 安装包路径添加 `config.json`,安装包会自动检测并使用该配置
 
    ```
@@ -139,7 +142,7 @@ npm run build-w-64
 
 ## 中转服务
 
-项目支持 [node-hiprint-transit](https://github.com/Xavier9896/node-hiprint-transit)，可解决跨域问题并实现云打印功能
+项目支持 `node-hiprint-transit`，可解决跨域问题并实现云打印功能，详见 [node-hiprint-transit](https://github.com/Xavier9896/node-hiprint-transit)
 
 <div align="center">
 
@@ -185,7 +188,7 @@ npm run build-w-64
 
 3. 获取客户端信息
 
-   <details>
+   <details open>
      <summary>
        与 <b>electron-hiprint</b> 建立连接
      </summary>
@@ -337,6 +340,10 @@ if (globalThis.connect) {
   alert("未连接客户端！");
   window.open("hiprint://");
 }
+
+socket.on("paperSizeInfo", (paperSizes) => {
+  console.log(paperSizes);
+});
 ```
 
 ```js
@@ -364,7 +371,7 @@ if (globalThis.connect) {
 
 ## 打印 HTML
 
-<details>
+<details open>
   <summary>
     连接为 <b>electron-hiprint</b>
   </summary>
@@ -385,6 +392,8 @@ if (globalThis.connect) {
   window.open("hiprint://");
 }
 ```
+
+[打印回调](#打印回调)
 
 </details>
 
@@ -492,7 +501,8 @@ socket.emit("news", { html, client, printer, type: 'pdf'})
 
 原理：
 
-1.通过 node 的 http 或 https 库下载网络 pdf 文件至用户临时目录 2.后续内容同使用 pdf 打印功能
+1. 通过 node 的 http 或 https 库下载网络 pdf 文件至用户临时目录
+2. 后续内容同使用 pdf 打印功能
 
 > 因为打印网络 pdf 不存在模板拼接，所以打印时直接如下调用即可
 
@@ -530,10 +540,10 @@ socket.on("error", (res) => {
 });
 ```
 
-## 模板+data 返回 jpeg、pdf、打印
+## 模板+data 或 html 返回 jpeg、pdf、打印
 
 > [!TIP]
-> 该功能属于 1.0.12-beta7 测试功能
+> 该功能依赖 electron-hiprint@^1.0.12-beta7 版本
 
 现在，你可以通过对应 socket 事件，调用 electron-hiprint 生成 jpeg、矢量 pdf 和直接打印了。
 
@@ -546,6 +556,18 @@ socket.on("error", (res) => {
 ![image](./res/electron-hiprint_set_pluginVersion.png)
 
 </div>
+
+| apiName              | 参数                        | 说明                                               |
+| -------------------- | --------------------------- | -------------------------------------------------- |
+| render-jpeg          | `template`,`data` / `html`  | 调用 electron 生成 jpeg                            |
+| render-jpeg-success  | `templateId`,`buffer`,`msg` | 成功回调，返回 templateId 和生成的 jpeg 二进制数据 |
+| render-jpeg-error    | `templateId`,`msg`          | 错误回调，返回 templateId 和错误信息               |
+| render-pdf           | `template`,`data` / `html`  | 调用 electron 生成 pdf                             |
+| render-pdf-success   | `templateId`,`buffer`,`msg` | 成功回调，返回 templateId 和生成的 pdf 二进制数据  |
+| render-pdf-error     | `templateId`,`msg`          | 错误回调，返回 templateId 和错误信息               |
+| render-print         | `template`,`data` / `html`  | 调用 electron 打印                                 |
+| render-print-success | `templateId`,`msg`          | 成功回调，返回 templateId 和打印成功信息           |
+| render-print-error   | `templateId`,`msg`          | 错误回调，返回 templateId 和错误信息               |
 
 <details>
     <summary>vue-plugin-hiprint</summary>
@@ -592,7 +614,7 @@ socket.on("render-print-error", (data) => {
 
 </details>
 
-<details>
+<details open>
     <summary>node.js demo</summary>
 
 ```node
@@ -639,9 +661,9 @@ socket.on("disconnect", () => {
 ## 打印记录
 
 > [!TIP]
-> 打印记录功能属于 1.0.12-beta1 测试功能
+> 打印记录功能属于 ^1.0.12-beta1 功能
 
-客户端将会记录每一条 news ，你可以从这里查询历史打印记录，是否成功，重打操作等。
+客户端将会记录每一条 `news` ，你可以从这里查询历史打印记录，是否成功，重打操作等。
 
 <div align="center">
 
