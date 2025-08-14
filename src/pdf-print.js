@@ -107,7 +107,7 @@ const printPdf = (pdfPath, printer, data) => {
  * @param {object} data 打印参数
  * @return {Promise}
  */
-const printPdf = () => {
+const printPdf = (pdfBlob, printer, data) => {
   return new Promise((resolve, reject) => {
     try {
       if (!pdfBlob || (!Buffer.isBuffer(pdfBlob) && !(pdfBlob instanceof Uint8Array))) {
