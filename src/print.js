@@ -4,7 +4,7 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const os = require("os");
 const fs = require("fs");
-const printPdf = require("./pdf-print");
+const { printPdf, printPdfBlob } = require("./pdf-print");
 const log = require("../tools/log");
 const { store, getCurrentPrintStatusByName } = require("../tools/utils");
 const db = require("../tools/database");
@@ -261,6 +261,81 @@ function initPrintEvent() {
         });
       return;
     }
+    // blob_pdf 打印 - 直接接收二进制PDF数据
+    const isBlobPdf = data.type && `${data.type}`.toLowerCase() === "blob_pdf";
+    if (isBlobPdf) {
+      // 参数校验
+      if (!data.pdf_blob) {
+        const errorMsg = "blob_pdf类型打印缺少pdf_blob参数";
+        log(
+          `${data.replyId ? "中转服务" : "插件端"} ${socket?.id} 模板 【${
+            data.templateId
+          }】 打印失败，原因：${errorMsg}`,
+        );
+        socket &&
+        socket.emit("error", {
+          msg: errorMsg,
+          templateId: data.templateId,
+          replyId: data.replyId,
+        });
+        logPrintResult("failed", errorMsg);
+        if (data.taskId) {
+          PRINT_RUNNER_DONE[data.taskId]();
+          delete PRINT_RUNNER_DONE[data.taskId];
+        }
+        MAIN_WINDOW.webContents.send("printTask", PRINT_RUNNER.isBusy());
+        return;
+      }
+      
+      printPdfBlob(data.pdf_blob, deviceName, data)
+        .then(() => {
+          log(
+            `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
+              data.templateId
+            }】 打印成功，打印类型：BLOB_PDF，打印机：${deviceName}，页数：${
+              data.pageNum
+            }`,
+          );
+          if (socket) {
+            checkPrinterStatus(deviceName, () => {
+              const result = {
+                msg: "打印成功",
+                templateId: data.templateId,
+                replyId: data.replyId,
+              };
+              socket.emit("successs", result); // 兼容 vue-plugin-hiprint 0.0.56 之前包
+              socket.emit("success", result);
+            });
+          }
+          logPrintResult("success");
+        })
+        .catch((err) => {
+          log(
+            `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
+              data.templateId
+            }】 打印失败，打印类型：BLOB_PDF，打印机：${deviceName}，原因：${
+              err.message
+            }`,
+          );
+          socket &&
+          socket.emit("error", {
+            msg: "打印失败: " + err.message,
+            templateId: data.templateId,
+            replyId: data.replyId,
+          });
+          logPrintResult("failed", err.message);
+        })
+        .finally(() => {
+          if (data.taskId) {
+            // 通过 taskMap 调用 task done 回调
+            PRINT_RUNNER_DONE[data.taskId]();
+            // 删除 task
+            delete PRINT_RUNNER_DONE[data.taskId];
+          }
+          MAIN_WINDOW.webContents.send("printTask", PRINT_RUNNER.isBusy());
+        });
+    }
+
     // 打印 详见https://www.electronjs.org/zh/docs/latest/api/web-contents
     PRINT_WINDOW.webContents.print(
       {
