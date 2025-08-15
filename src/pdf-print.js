@@ -100,4 +100,57 @@ const printPdf = (pdfPath, printer, data) => {
   });
 };
 
-module.exports = printPdf;
+/**
+ * @description: 打印Blob类型的PDF数据
+ * @param {Blob|Uint8Array|Buffer} pdfBlob PDF的二进制数据
+ * @param {string} printer 打印机名称
+ * @param {object} data 打印参数
+ * @return {Promise}
+ */
+const printPdfBlob = (pdfBlob, printer, data) => {
+  return new Promise((resolve, reject) => {
+    try {
+      // 验证blob数据 实际是 Uint8Array
+      if (!pdfBlob || !(pdfBlob instanceof Blob || pdfBlob instanceof Uint8Array || Buffer.isBuffer(pdfBlob))) {
+        reject(new Error("pdfBlob must be a Blob, Uint8Array, or Buffer"));
+        return;
+      }
+
+      // 生成临时文件路径
+      const toSavePath = path.join(
+        store.get("pdfPath") || os.tmpdir(),
+        "blob_pdf",
+        dayjs().format(`YYYY_MM_DD HH_mm_ss_`) + `${uuidv7()}.pdf`,
+      );
+
+      // 确保目录存在
+      fs.mkdirSync(path.dirname(toSavePath), { recursive: true });
+
+      // Uint8Array 2 Buffer
+      const buffer = Buffer.isBuffer(pdfBlob) ? pdfBlob : Buffer.from(pdfBlob);
+
+      // 写入文件
+      fs.writeFile(toSavePath, buffer, (err) => {
+        if (err) {
+          log("save blob pdf error:" + err?.message);
+          reject(err);
+          return;
+        }
+
+        log("blob pdf saved:" + toSavePath);
+
+        // 调用打印函数
+        realPrint(toSavePath, printer, data, resolve, reject);
+      });
+
+    } catch (error) {
+      log("print blob error:" + error?.message);
+      reject(error);
+    }
+  });
+};
+
+module.exports = {
+  printPdf,
+  printPdfBlob
+};

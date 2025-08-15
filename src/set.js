@@ -116,19 +116,11 @@ function setConfig(event, data) {
     .then((res) => {
       if (res.response === 0) {
         try {
-          const pdfPath = path.join(data.pdfPath, "url_pdf");
+          let pdfPath = path.join(data.pdfPath, "url_pdf");
           fs.mkdirSync(pdfPath, { recursive: true });
-        } catch {
-          dialog.showMessageBox(SET_WINDOW, {
-            type: "error",
-            title: "提示",
-            message: "pdf 保存路径无法写入数据，请重新设置！",
-            buttons: ["确定"],
-          });
-          return;
-        }
-        try {
-          const pdfPath = path.join(data.pdfPath, "hiprint");
+          pdfPath = path.join(data.pdfPath, "blob_pdf");
+          fs.mkdirSync(pdfPath, { recursive: true });
+          pdfPath = path.join(data.pdfPath, "hiprint");
           fs.mkdirSync(pdfPath, { recursive: true });
         } catch {
           dialog.showMessageBox(SET_WINDOW, {

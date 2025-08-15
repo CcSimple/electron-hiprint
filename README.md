@@ -514,6 +514,7 @@ hiprint.hiwebSocket.send({
   client,
   printer,
   type: "url_pdf",
+  templateId: "自定义Id，用于判断任务是否成功",
   pdf_path: "网络PDF的下载url",
 });
 
@@ -522,7 +523,32 @@ socket.emit("news", {
   client,
   printer,
   type: "url_pdf",
+  templateId: "自定义Id，用于判断任务是否成功",
   pdf_path: "网络PDF的下载url",
+});
+```
+
+## Blob 打印 PDF (🧪实验性功能)
+
+> ^1.0.14-beta4
+
+```js
+// vue-plugin-hiprint
+hiprint.hiwebSocket.send({
+  client,
+  printer,
+  type: "blob_pdf",
+  templateId: "自定义Id，用于判断任务是否成功",
+  pdf_blob: Blob,
+});
+
+// 非vue-plugin-hiprint
+socket.emit("news", {
+  client,
+  printer,
+  type: "blob_pdf",
+  templateId: "自定义Id，用于判断任务是否成功",
+  pdf_blob: Blob,
 });
 ```
 
