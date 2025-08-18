@@ -6,7 +6,6 @@ const path = require("path");
 const { Jimp } = require("jimp");
 const dayjs = require("dayjs");
 
-const log = require("../tools/log");
 const { store } = require("../tools/utils");
 const db = require("../tools/database");
 
@@ -213,7 +212,7 @@ async function capturePage(event, data) {
             () => {},
           );
         }
-        log(
+        console.log(
           `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模版 【${
             data.templateId
           }】 获取 png 成功`,
@@ -226,7 +225,7 @@ async function capturePage(event, data) {
         });
       });
   } catch (error) {
-    log(
+    console.log(
       `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模版 【${
         data.templateId
       }】 获取 png 失败`,
@@ -287,7 +286,7 @@ function printToPDF(event, data) {
       });
     })
     .catch((error) => {
-      log(
+      console.log(
         `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模版 【${
           data.templateId
         }】 获取 pdf 失败`,
@@ -348,7 +347,7 @@ async function printFun(event, data) {
     }
   });
   if (printerError) {
-    log(
+    console.log(
       `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
         data.templateId
       }】 打印失败，打印机异常，打印机：${data.printer}`,
@@ -413,7 +412,7 @@ async function printFun(event, data) {
     (success, failureReason) => {
       if (socket) {
         if (success) {
-          log(
+          console.log(
             `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
               data.templateId
             }】 打印成功，打印类型 JSON，打印机：${deviceName}，页数：${
@@ -428,7 +427,7 @@ async function printFun(event, data) {
           logPrintResult("success");
           socket.emit("render-print-success", result);
         } else {
-          log(
+          console.log(
             `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
               data.templateId
             }】 打印失败，打印类型 JSON，打印机：${deviceName}，原因：${failureReason}`,

@@ -6,7 +6,6 @@ const { machineIdSync } = require("node-machine-id");
 const Store = require("electron-store");
 const { getPaperSizeInfo, getPaperSizeInfoAll } = require("win32-pdf-printer");
 const { v7: uuidv7 } = require("uuid");
-const log = require("./log");
 
 Store.initRenderer();
 
@@ -155,8 +154,8 @@ const watchTaskInstance = generateWatchTask(
  * @description: 尝试获取客户端唯一id，依赖管理员权限与注册表读取
  * @return {string}
  */
-function getMachineId(){
-  try {    
+function getMachineId() {
+  try {
     return machineIdSync({ original: true });
   } catch (error) {
     // 若获取失败，也可以使用 UUID 代替，需要单独存储 首次创建 后续读取
@@ -260,7 +259,7 @@ function initServeEvent(server) {
   server.use((socket, next) => {
     const token = store.get("token");
     if (token && token !== socket.handshake.auth.token) {
-      log(
+      console.log(
         `==> 插件端 Authentication error: ${socket.id}, token: ${socket.handshake.auth.token}`,
       );
       const err = new Error("Authentication error");
@@ -277,7 +276,7 @@ function initServeEvent(server) {
    * @description: 新的 web client 连入，绑定 socket 事件
    */
   server.on("connect", async (socket) => {
-    log(`==> 插件端 New Connected: ${socket.id}`);
+    console.log(`==> 插件端 New Connected: ${socket.id}`);
 
     // 通知渲染进程已连接
     MAIN_WINDOW.webContents.send(
@@ -309,7 +308,7 @@ function initServeEvent(server) {
      * @description: client 请求客户端信息
      */
     socket.on("getClientInfo", () => {
-      log(`插件端 ${socket.id}: getClientInfo`);
+      console.log(`插件端 ${socket.id}: getClientInfo`);
       emitClientInfo(socket);
     });
 
@@ -320,7 +319,9 @@ function initServeEvent(server) {
      * @param {String} addressType ip、ipv6、mac、all === null
      */
     socket.on("address", (addressType) => {
-      log(`插件端 ${socket.id}: get address(${addressType || "未指定类型"})`);
+      console.log(
+        `插件端 ${socket.id}: get address(${addressType || "未指定类型"})`,
+      );
       switch (addressType) {
         case "ip":
         case "ipv6":
@@ -345,7 +346,7 @@ function initServeEvent(server) {
      * @description: client 请求刷新打印机列表
      */
     socket.on("refreshPrinterList", async () => {
-      log(`插件端 ${socket.id}: refreshPrinterList`);
+      console.log(`插件端 ${socket.id}: refreshPrinterList`);
       socket.emit(
         "printerList",
         await MAIN_WINDOW.webContents.getPrintersAsync(),
@@ -356,7 +357,7 @@ function initServeEvent(server) {
      * @description: client 获取打印机纸张信息
      */
     socket.on("getPaperSizeInfo", (printer) => {
-      log(`插件端 ${socket.id}: getPaperSizeInfo`);
+      console.log(`插件端 ${socket.id}: getPaperSizeInfo`);
       if (process.platform === "win32") {
         let fun = printer ? getPaperSizeInfo : getPaperSizeInfoAll;
         let paper = fun();
@@ -368,7 +369,7 @@ function initServeEvent(server) {
      * @description: client 调用 ipp 打印 详见：https://www.npmjs.com/package/ipp
      */
     socket.on("ippPrint", (options) => {
-      log(`插件端 ${socket.id}: ippPrint`);
+      console.log(`插件端 ${socket.id}: ippPrint`);
       try {
         const { url, opt, action, message } = options;
         let printer = ipp.Printer(url, opt);
@@ -402,7 +403,7 @@ function initServeEvent(server) {
           );
         });
       } catch (error) {
-        log(`插件端 ${socket.id}: ippPrint error: ${error.message}`);
+        console.log(`插件端 ${socket.id}: ippPrint error: ${error.message}`);
         socket.emit("ippPrinterCallback", {
           type: error.name,
           msg: error.message,
@@ -414,7 +415,7 @@ function initServeEvent(server) {
      * @description: client ipp request 详见：https://www.npmjs.com/package/ipp
      */
     socket.on("ippRequest", (options) => {
-      log(`插件端 ${socket.id}: ippRequest`);
+      console.log(`插件端 ${socket.id}: ippRequest`);
       try {
         const { url, data } = options;
         let _data = ipp.serialize(data);
@@ -426,7 +427,7 @@ function initServeEvent(server) {
           );
         });
       } catch (error) {
-        log(`插件端 ${socket.id}: ippRequest error: ${error.message}`);
+        console.log(`插件端 ${socket.id}: ippRequest error: ${error.message}`);
         socket.emit("ippRequestCallback", {
           type: error.name,
           msg: error.message,
@@ -531,7 +532,7 @@ function initServeEvent(server) {
      * @description: client 断开连接
      */
     socket.on("disconnect", () => {
-      log(`==> 插件端 Disconnect: ${socket.id}`);
+      console.log(`==> 插件端 Disconnect: ${socket.id}`);
       MAIN_WINDOW?.webContents?.send(
         "serverConnection",
         server.engine.clientsCount,
@@ -552,7 +553,7 @@ function initClientEvent() {
    * @description: 连接中转服务成功，绑定 socket 事件
    */
   client.on("connect", async () => {
-    log(`==> 中转服务 Connected Transit Server: ${client.id}`);
+    console.log(`==> 中转服务 Connected Transit Server: ${client.id}`);
     // 通知渲染进程已连接
     MAIN_WINDOW.webContents.send("clientConnection", true);
 
@@ -581,7 +582,7 @@ function initClientEvent() {
    * @description: 中转服务 请求客户端信息
    */
   client.on("getClientInfo", () => {
-    log(`中转服务 ${client.id}: getClientInfo`);
+    console.log(`中转服务 ${client.id}: getClientInfo`);
     emitClientInfo(client);
   });
 
@@ -589,7 +590,7 @@ function initClientEvent() {
    * @description: 中转服务 请求刷新打印机列表
    */
   client.on("refreshPrinterList", async () => {
-    log(`中转服务 ${client.id}: refreshPrinterList`);
+    console.log(`中转服务 ${client.id}: refreshPrinterList`);
     client.emit(
       "printerList",
       await MAIN_WINDOW.webContents.getPrintersAsync(),
@@ -600,7 +601,7 @@ function initClientEvent() {
    * @description: 中转服务 调用 ipp 打印 详见：https://www.npmjs.com/package/ipp
    */
   client.on("ippPrint", (options) => {
-    log(`中转服务 ${client.id}: ippPrint`);
+    console.log(`中转服务 ${client.id}: ippPrint`);
     try {
       const { url, opt, action, message, replyId } = options;
       let printer = ipp.Printer(url, opt);
@@ -634,7 +635,7 @@ function initClientEvent() {
         );
       });
     } catch (error) {
-      log(`中转服务 ${client.id}: ippPrint error: ${error.message}`);
+      console.log(`中转服务 ${client.id}: ippPrint error: ${error.message}`);
       client.emit("ippPrinterCallback", {
         type: error.name,
         msg: error.message,
@@ -647,7 +648,7 @@ function initClientEvent() {
    * @description: 中转服务 ipp request 详见：https://www.npmjs.com/package/ipp
    */
   client.on("ippRequest", (options) => {
-    log(`中转服务 ${client.id}: ippRequest`);
+    console.log(`中转服务 ${client.id}: ippRequest`);
     try {
       const { url, data, replyId } = options;
       let _data = ipp.serialize(data);
@@ -659,7 +660,7 @@ function initClientEvent() {
         );
       });
     } catch (error) {
-      log(`中转服务 ${client.id}: ippRequest error: ${error.message}`);
+      console.log(`中转服务 ${client.id}: ippRequest error: ${error.message}`);
       client.emit("ippRequestCallback", {
         type: error.name,
         msg: error.message,
@@ -724,7 +725,7 @@ function initClientEvent() {
    * @description: 中转服务 断开连接
    */
   client.on("disconnect", () => {
-    log(`==> 中转服务 Disconnect: ${client.id}`);
+    console.log(`==> 中转服务 Disconnect: ${client.id}`);
     MAIN_WINDOW.webContents.send("clientConnection", false);
   });
 }
@@ -732,21 +733,20 @@ function initClientEvent() {
 /**
  * @description: 打印机状态码 十进制 -> 十六进制, 返回对应的详细错误信息， 详见：https://github.com/mlmdflr/win32-pdf-printer/blob/51f7a9b3687e260a7d83ea467b22b374fb153b52/paper-size-info/Status.cs
  * @param { String } printerName  打印机名称
- * @return { Object  { StatusMsg: String // 打印机状态详情信息 } }  
-*/
+ * @return { Object  { StatusMsg: String // 打印机状态详情信息 } }
+ */
 
 function getCurrentPrintStatusByName(printerName) {
-   if (process.platform === "win32") {
-    const { StatusMsg } = getPaperSizeInfoAll().find((item) => item.PrinterName === printerName) || { StatusMsg : "未找到打印机" };
+  if (process.platform === "win32") {
+    const { StatusMsg } = getPaperSizeInfoAll().find(
+      (item) => item.PrinterName === printerName,
+    ) || { StatusMsg: "未找到打印机" };
     return {
       StatusMsg,
-    }
+    };
   }
-  return { StatusMsg : "非Windows系统, 暂不支持" }
+  return { StatusMsg: "非Windows系统, 暂不支持" };
 }
-
-
-
 
 module.exports = {
   store,
