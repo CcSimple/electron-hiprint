@@ -145,7 +145,15 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }} (${{ env.RELEASE_DATE }})
           draft: true
-          body: "Github Actions 自动发布的 Release"
+          generate_release_notes: true
+          body: |
+            Github Actions 自动发布的 Release
+
+            > [!IMPORTANT]
+            > macOS 提示应用程序已经损坏，解决方案
+            >
+            > [文件提示损坏解决办法 macwk.cn](https://macwk.cn/1144.html)
+            > `sudo xattr -r -d com.apple.quarantine /应用程序路径/hiprint.app`
           files: |
             artifacts/win/**
             artifacts/mac/**
