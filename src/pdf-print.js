@@ -149,7 +149,7 @@ const printPdfBlob = (pdfBlob, printer, data) => {
         realPrint(toSavePath, printer, data, resolve, reject);
       });
     } catch (error) {
-      log("print blob error:" + error?.message);
+      console.log("print blob error:" + error?.message);
       reject(error);
     }
   });
