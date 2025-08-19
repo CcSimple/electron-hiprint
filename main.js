@@ -14,6 +14,7 @@ const {
   Menu,
   shell,
 } = require("electron");
+const electronLog = require("electron-log");
 const path = require("path");
 const server = require("http").createServer();
 const helper = require("./src/helper");
@@ -21,7 +22,6 @@ const printSetup = require("./src/print");
 const renderSetup = require("./src/render");
 const setSetup = require("./src/set");
 const printLogSetup = require("./src/printLog");
-const log = require("./tools/log");
 const {
   store,
   address,
@@ -31,13 +31,30 @@ const {
 } = require("./tools/utils");
 
 const TaskRunner = require("concurrent-tasks");
+const dayjs = require("dayjs");
+
+const logPath = store.get("logPath") || app.getPath("logs");
+
+Object.assign(console, electronLog.functions);
+
+electronLog.transports.file.resolvePathFn = () =>
+  path.join(logPath, dayjs().format("YYYY-MM-DD.log"));
+
+// 监听崩溃事件
+process.on("uncaughtException", (error) => {
+  console.error(error);
+});
+
+// 监听渲染进程崩溃
+app.on("web-contents-created", (event, contents) => {
+  contents.on("render-process-gone", (event, details) => {
+    console.error(details.reason);
+  });
+});
 
 if (store.get("disabledGpu")) {
   app.commandLine.appendSwitch("disable-gpu");
 }
-
-app.commandLine.appendSwitch("high-dpi-support", "1");
-app.commandLine.appendSwitch("force-device-scale-factor", "1");
 
 // 主进程
 global.MAIN_WINDOW = null;
@@ -154,7 +171,7 @@ async function initialize() {
         createWindow();
       }
     });
-    log("==> Electron-hiprint 启动 <==");
+    console.log("==> Electron-hiprint 启动 <==");
   });
 }
 
@@ -350,18 +367,21 @@ function initTray() {
     {
       label: "设置",
       click: () => {
+        console.log("==>TRAY 打开设置窗口<==");
         openSetWindow();
       },
     },
     {
       label: "软件日志",
       click: () => {
-        shell.openPath(app.getPath("logs"));
+        console.log("==>TRAY 查看软件日志<==");
+        shell.openPath(logPath);
       },
     },
     {
       label: "打印记录",
       click: () => {
+        console.log("==>TRAY 打开打印记录窗口<==");
         if (!PRINT_LOG_WINDOW) {
           printLogSetup();
         } else {
@@ -372,6 +392,7 @@ function initTray() {
     {
       label: "退出",
       click: () => {
+        console.log("==>TRAY 退出应用<==");
         helper.appQuit();
       },
     },
@@ -381,6 +402,7 @@ function initTray() {
 
   // 监听点击事件
   APP_TRAY.on("click", function() {
+    console.log("==>TRAY 点击托盘图标<==");
     showMainWindow();
   });
   return APP_TRAY;

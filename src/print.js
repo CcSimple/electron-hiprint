@@ -5,7 +5,6 @@ const path = require("path");
 const os = require("os");
 const fs = require("fs");
 const { printPdf, printPdfBlob } = require("./pdf-print");
-const log = require("../tools/log");
 const { store, getCurrentPrintStatusByName } = require("../tools/utils");
 const db = require("../tools/database");
 const dayjs = require("dayjs");
@@ -90,7 +89,7 @@ function initPrintEvent() {
     });
     if (printerError) {
       const { StatusMsg } = getCurrentPrintStatusByName(defaultPrinter);
-      log(
+      console.log(
         `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
           data.templateId
         }】 打印失败，打印机异常，打印机：${defaultPrinter}, 打印机状态：${StatusMsg}`,
@@ -163,7 +162,7 @@ function initPrintEvent() {
           fs.writeFileSync(pdfPath, pdfData);
           printPdf(pdfPath, deviceName, data)
             .then(() => {
-              log(
+              console.log(
                 `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
                   data.templateId
                 }】 打印成功，打印类型：PDF，打印机：${deviceName}，页数：${
@@ -182,7 +181,7 @@ function initPrintEvent() {
               logPrintResult("success");
             })
             .catch((err) => {
-              log(
+              console.log(
                 `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
                   data.templateId
                 }】 打印失败，打印类型：PDF，打印机：${deviceName}，原因：${
@@ -214,7 +213,7 @@ function initPrintEvent() {
     if (isUrlPdf) {
       printPdf(data.pdf_path, deviceName, data)
         .then(() => {
-          log(
+          console.log(
             `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
               data.templateId
             }】 打印成功，打印类型：URL_PDF，打印机：${deviceName}，页数：${
@@ -235,7 +234,7 @@ function initPrintEvent() {
           logPrintResult("success");
         })
         .catch((err) => {
-          log(
+          console.log(
             `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
               data.templateId
             }】 打印失败，打印类型：URL_PDF，打印机：${deviceName}，原因：${
@@ -268,7 +267,7 @@ function initPrintEvent() {
       // 验证必要参数
       if (!data.pdf_blob) {
         const errorMsg = "blob_pdf类型打印缺少pdf_blob参数";
-        log(
+        console.log(
           `${data.replyId ? "中转服务" : "插件端"} ${socket?.id} 模板 【${
             data.templateId
           }】 打印失败，原因：${errorMsg}`,
@@ -291,7 +290,7 @@ function initPrintEvent() {
       delete data.pdf_blob;
       printPdfBlob(pdfBlob, deviceName, data)
         .then(() => {
-          log(
+          console.log(
             `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
               data.templateId
             }】 打印成功，打印类型：BLOB_PDF，打印机：${deviceName}，页数：${
@@ -312,7 +311,7 @@ function initPrintEvent() {
           logPrintResult("success");
         })
         .catch((err) => {
-          log(
+          console.log(
             `${data.replyId ? "中转服务" : "插件端"} ${socket.id} 模板 【${
               data.templateId
             }】 打印失败，打印类型：BLOB_PDF，打印机：${deviceName}，原因：${
@@ -362,7 +361,7 @@ function initPrintEvent() {
       },
       (success, failureReason) => {
         if (success) {
-          log(
+          console.log(
             `${data.replyId ? "中转服务" : "插件端"} ${socket?.id} 模板 【${
               data.templateId
             }】 打印成功，打印类型 HTML，打印机：${deviceName}，页数：${
@@ -371,7 +370,7 @@ function initPrintEvent() {
           );
           logPrintResult("success");
         } else {
-          log(
+          console.log(
             `${data.replyId ? "中转服务" : "插件端"} ${socket?.id} 模板 【${
               data.templateId
             }】 打印失败，打印类型 HTML，打印机：${deviceName}，原因：${failureReason}`,
@@ -413,18 +412,20 @@ function checkPrinterStatus(deviceName, callback) {
       .getPrintersAsync()
       .then((printers) => {
         const printer = printers.find((printer) => printer.name === deviceName);
-        log(`current printer: ${JSON.stringify(printer)}`);
+        console.log(`current printer: ${JSON.stringify(printer)}`);
         const ISCAN_STATUS = process.platform === "win32" ? 0 : 3;
         if (printer && printer.status === ISCAN_STATUS) {
           callback && callback();
           clearInterval(intervalId); // Stop polling when status is 0
-          log(`Printer ${deviceName} is now ready (status: ${ISCAN_STATUS})`);
+          console.log(
+            `Printer ${deviceName} is now ready (status: ${ISCAN_STATUS})`,
+          );
           // You can add any additional logic here for when the printer is ready
         }
       })
       .catch((error) => {
         clearInterval(intervalId); // Also clear interval on error
-        log(`Error checking printer status: ${error}`);
+        console.log(`Error checking printer status: ${error}`);
       });
   }, 1000); // Check every 1 second (adjust interval as needed)
 
