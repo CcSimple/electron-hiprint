@@ -227,7 +227,9 @@ async function createWindow() {
   // 主窗口 Dom 加载完毕
   MAIN_WINDOW.webContents.on("dom-ready", async () => {
     try {
-      !store.get("openAsHidden") && MAIN_WINDOW.show()
+      if (!store.get("openAsHidden")) {
+        MAIN_WINDOW.show();
+      }
       // 未打包时打开开发者工具
       if (!app.isPackaged) {
         MAIN_WINDOW.webContents.openDevTools();
