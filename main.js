@@ -36,9 +36,6 @@ if (store.get("disabledGpu")) {
   app.commandLine.appendSwitch("disable-gpu");
 }
 
-app.commandLine.appendSwitch("high-dpi-support", "1");
-app.commandLine.appendSwitch("force-device-scale-factor", "1");
-
 // 主进程
 global.MAIN_WINDOW = null;
 // 托盘
