@@ -170,7 +170,7 @@ async function createWindow() {
     useContentSize: true, // 窗口大小不包含边框
     center: true, // 居中
     resizable: false, // 禁止窗口缩放
-    show: false, // 显示
+    show: false, // 初始隐藏
     webPreferences: {
       // 设置此项为false后，才可在渲染进程中使用 electron api
       contextIsolation: false,
