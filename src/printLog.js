@@ -80,6 +80,7 @@ function loadingView(windowOptions) {
 
   // 打印日志窗口 dom 加载完毕，移除 loadingBrowserView
   PRINT_LOG_WINDOW.webContents.on("dom-ready", async (event) => {
+    loadingBrowserView.webContents.destroy();
     PRINT_LOG_WINDOW.removeBrowserView(loadingBrowserView);
   });
 }

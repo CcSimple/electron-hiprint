@@ -91,6 +91,7 @@ function loadingView(windowOptions) {
 
   // 设置窗口 dom 加载完毕，移除 loadingBrowserView
   SET_WINDOW.webContents.on("dom-ready", async (event) => {
+    loadingBrowserView.webContents.destroy();
     SET_WINDOW.removeBrowserView(loadingBrowserView);
   });
 }

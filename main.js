@@ -187,7 +187,7 @@ async function createWindow() {
     useContentSize: true, // 窗口大小不包含边框
     center: true, // 居中
     resizable: false, // 禁止窗口缩放
-    show: store.get("openAsHidden") ? false : true, // 显示
+    show: false, // 初始隐藏
     webPreferences: {
       // 设置此项为false后，才可在渲染进程中使用 electron api
       contextIsolation: false,
@@ -244,6 +244,9 @@ async function createWindow() {
   // 主窗口 Dom 加载完毕
   MAIN_WINDOW.webContents.on("dom-ready", async () => {
     try {
+      if (!store.get("openAsHidden")) {
+        MAIN_WINDOW.show();
+      }
       // 未打包时打开开发者工具
       if (!app.isPackaged) {
         MAIN_WINDOW.webContents.openDevTools();
@@ -310,6 +313,7 @@ function loadingView(windowOptions) {
 
   // 主窗口 dom 加载完毕，移除 loadingBrowserView
   MAIN_WINDOW.webContents.on("dom-ready", async (event) => {
+    loadingBrowserView.webContents.destroy();
     MAIN_WINDOW.removeBrowserView(loadingBrowserView);
   });
 }
