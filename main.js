@@ -170,7 +170,7 @@ async function createWindow() {
     useContentSize: true, // 窗口大小不包含边框
     center: true, // 居中
     resizable: false, // 禁止窗口缩放
-    show: store.get("openAsHidden") ? false : true, // 显示
+    show: false, // 显示
     webPreferences: {
       // 设置此项为false后，才可在渲染进程中使用 electron api
       contextIsolation: false,
@@ -192,7 +192,7 @@ async function createWindow() {
   MAIN_WINDOW = new BrowserWindow(windowOptions);
 
   // 添加加载页面 解决白屏的问题
-  loadingView(windowOptions);
+  // loadingView(windowOptions);
 
   // 初始化系统设置
   systemSetup();
@@ -227,6 +227,7 @@ async function createWindow() {
   // 主窗口 Dom 加载完毕
   MAIN_WINDOW.webContents.on("dom-ready", async () => {
     try {
+      !store.get("openAsHidden") && MAIN_WINDOW.show()
       // 未打包时打开开发者工具
       if (!app.isPackaged) {
         MAIN_WINDOW.webContents.openDevTools();

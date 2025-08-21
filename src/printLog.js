@@ -32,7 +32,7 @@ function createPrintLogWindow() {
   PRINT_LOG_WINDOW = new BrowserWindow(windowOptions);
 
   // 添加加载页面 解决白屏的问题
-  loadingView(windowOptions);
+  // loadingView(windowOptions);
 
   // 加载打印日志页面
   const printLogHtml = path.join(
