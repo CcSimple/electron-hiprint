@@ -43,7 +43,7 @@ async function createSetWindow() {
   SET_WINDOW = new BrowserWindow(windowOptions);
 
   // 添加加载页面 解决白屏的问题
-  // loadingView(windowOptions);
+  loadingView(windowOptions);
 
   // 加载设置渲染进程页面
   const setHtmlUrl = path.join("file://", app.getAppPath(), "assets/set.html");
@@ -92,6 +92,7 @@ function loadingView(windowOptions) {
 
   // 设置窗口 dom 加载完毕，移除 loadingBrowserView
   SET_WINDOW.webContents.on("dom-ready", async (event) => {
+    loadingBrowserView.webContents.destroy();
     SET_WINDOW.removeBrowserView(loadingBrowserView);
   });
 }

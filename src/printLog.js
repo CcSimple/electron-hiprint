@@ -32,7 +32,7 @@ function createPrintLogWindow() {
   PRINT_LOG_WINDOW = new BrowserWindow(windowOptions);
 
   // 添加加载页面 解决白屏的问题
-  // loadingView(windowOptions);
+  loadingView(windowOptions);
 
   // 加载打印日志页面
   const printLogHtml = path.join(
@@ -80,6 +80,7 @@ function loadingView(windowOptions) {
 
   // 打印日志窗口 dom 加载完毕，移除 loadingBrowserView
   PRINT_LOG_WINDOW.webContents.on("dom-ready", async (event) => {
+    loadingBrowserView.webContents.destroy();
     PRINT_LOG_WINDOW.removeBrowserView(loadingBrowserView);
   });
 }

@@ -192,7 +192,7 @@ async function createWindow() {
   MAIN_WINDOW = new BrowserWindow(windowOptions);
 
   // 添加加载页面 解决白屏的问题
-  // loadingView(windowOptions);
+  loadingView(windowOptions);
 
   // 初始化系统设置
   systemSetup();
@@ -296,6 +296,7 @@ function loadingView(windowOptions) {
 
   // 主窗口 dom 加载完毕，移除 loadingBrowserView
   MAIN_WINDOW.webContents.on("dom-ready", async (event) => {
+    loadingBrowserView.webContents.destroy();
     MAIN_WINDOW.removeBrowserView(loadingBrowserView);
   });
 }
