@@ -18,7 +18,6 @@ const path = require("path");
 const https = require("node:https");
 const fs = require("node:fs");
 const { store } = require("../tools/utils");
-const log = require("../tools/log");
 
 /**
  * @description: 创建设置窗口
@@ -92,6 +91,7 @@ function loadingView(windowOptions) {
 
   // 设置窗口 dom 加载完毕，移除 loadingBrowserView
   SET_WINDOW.webContents.on("dom-ready", async (event) => {
+    loadingBrowserView.webContents.destroy();
     SET_WINDOW.removeBrowserView(loadingBrowserView);
   });
 }
@@ -103,7 +103,7 @@ function loadingView(windowOptions) {
  * @return {void}
  */
 function setConfig(event, data) {
-  log("==> 设置窗口：保存配置 <==");
+  console.log("==> 设置窗口：保存配置 <==");
   // 保存配置前，弹出 dialog 确认
   dialog
     .showMessageBox(SET_WINDOW, {

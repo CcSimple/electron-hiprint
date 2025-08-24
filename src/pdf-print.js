@@ -11,7 +11,6 @@ const pdfPrint2 = require("unix-print");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
-const log = require("../tools/log");
 const { store } = require("../tools/utils");
 const dayjs = require("dayjs");
 const { v7: uuidv7 } = require("uuid");
@@ -34,7 +33,7 @@ const realPrint = (pdfPath, printer, data, resolve, reject) => {
   if (process.platform === "win32") {
     data = Object.assign({}, data);
     data.printer = printer;
-    log("print pdf:" + pdfPath + JSON.stringify(data));
+    console.log("print pdf:" + pdfPath + JSON.stringify(data));
     // 参数见 node_modules/pdf-to-printer/dist/print/print.d.ts
     // pdf打印文档：https://www.sumatrapdfreader.org/docs/Command-line-arguments
     // pdf-to-printer 源码: https://github.com/artiebits/pdf-to-printer
@@ -82,19 +81,19 @@ const printPdf = (pdfPath, printer, data) => {
             res.pipe(file);
             file.on("finish", () => {
               file.close();
-              log("file downloaded:" + toSavePath);
+              console.log("file downloaded:" + toSavePath);
               realPrint(toSavePath, printer, data, resolve, reject);
             });
           })
           .on("error", (err) => {
-            log("download pdf error:" + err?.message);
+            console.log("download pdf error:" + err?.message);
             reject(err);
           });
         return;
       }
       realPrint(pdfPath, printer, data, resolve, reject);
     } catch (error) {
-      log("print error:" + error?.message);
+      console.log("print error:" + error?.message);
       reject(error);
     }
   });
@@ -111,7 +110,11 @@ const printPdfBlob = (pdfBlob, printer, data) => {
   return new Promise((resolve, reject) => {
     try {
       // 验证blob数据 实际是 Uint8Array
-      if (!pdfBlob || !(pdfBlob instanceof Uint8Array || Buffer.isBuffer(pdfBlob))) {
+      if (
+        !pdfBlob ||
+        !(
+          pdfBlob instanceof Uint8Array || Buffer.isBuffer(pdfBlob))
+      ) {
         reject(new Error("pdfBlob must be a Uint8Array, Buffer"));
         return;
       }
@@ -132,19 +135,18 @@ const printPdfBlob = (pdfBlob, printer, data) => {
       // 写入文件
       fs.writeFile(toSavePath, buffer, (err) => {
         if (err) {
-          log("save blob pdf error:" + err?.message);
+          console.log("save blob pdf error:" + err?.message);
           reject(err);
           return;
         }
 
-        log("blob pdf saved:" + toSavePath);
+        console.log("blob pdf saved:" + toSavePath);
 
         // 调用打印函数
         realPrint(toSavePath, printer, data, resolve, reject);
       });
-
     } catch (error) {
-      log("print blob error:" + error?.message);
+      console.log("print blob error:" + error?.message);
       reject(error);
     }
   });
@@ -152,5 +154,5 @@ const printPdfBlob = (pdfBlob, printer, data) => {
 
 module.exports = {
   printPdf,
-  printPdfBlob
+  printPdfBlob,
 };
