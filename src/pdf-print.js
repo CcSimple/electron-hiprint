@@ -113,12 +113,9 @@ const printPdfBlob = (pdfBlob, printer, data) => {
       if (
         !pdfBlob ||
         !(
-          pdfBlob instanceof Blob ||
-          pdfBlob instanceof Uint8Array ||
-          Buffer.isBuffer(pdfBlob)
-        )
+          pdfBlob instanceof Uint8Array || Buffer.isBuffer(pdfBlob))
       ) {
-        reject(new Error("pdfBlob must be a Blob, Uint8Array, or Buffer"));
+        reject(new Error("pdfBlob must be a Uint8Array, Buffer"));
         return;
       }
 
