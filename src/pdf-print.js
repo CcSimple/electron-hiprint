@@ -111,8 +111,8 @@ const printPdfBlob = (pdfBlob, printer, data) => {
   return new Promise((resolve, reject) => {
     try {
       // 验证blob数据 实际是 Uint8Array
-      if (!pdfBlob || !(pdfBlob instanceof Blob || pdfBlob instanceof Uint8Array || Buffer.isBuffer(pdfBlob))) {
-        reject(new Error("pdfBlob must be a Blob, Uint8Array, or Buffer"));
+      if (!pdfBlob || !(pdfBlob instanceof Uint8Array || Buffer.isBuffer(pdfBlob))) {
+        reject(new Error("pdfBlob must be a Uint8Array, Buffer"));
         return;
       }
 
