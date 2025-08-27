@@ -128,6 +128,7 @@ function setConfig(event, data) {
             title: "提示",
             message: "pdf 保存路径无法写入数据，请重新设置！",
             buttons: ["确定"],
+            noLink: true,
           });
           return;
         }
@@ -139,6 +140,7 @@ function setConfig(event, data) {
             title: "提示",
             message: "日志保存路径无法写入数据，请重新设置！",
             buttons: ["确定"],
+            noLink: true,
           });
           return;
         }
@@ -194,6 +196,7 @@ function downloadPlugin(event, data) {
         title: "提示",
         message: "插件下载成功！",
         buttons: ["确定"],
+        noLink: true,
       });
       const downloadedVersions = getDownloadedVersions();
       SET_WINDOW.webContents.send("downloadedVersions", downloadedVersions);
@@ -204,6 +207,7 @@ function downloadPlugin(event, data) {
         title: "提示",
         message: "插件下载失败！",
         buttons: ["确定"],
+        noLink: true,
       });
     });
 }
@@ -225,7 +229,7 @@ function setContentSize(event, data) {
  * @return {void}
  */
 function showMessageBox(event, data) {
-  dialog.showMessageBox(SET_WINDOW, data);
+  dialog.showMessageBox(SET_WINDOW, { noLink: true, ...data });
 }
 
 /**
@@ -245,6 +249,7 @@ function showOpenDialog(event, data) {
           title: "提示",
           message: "路径无法写入，请重新选择！",
           buttons: ["确定"],
+          noLink: true,
         });
         result.canceled = true;
       }
@@ -289,6 +294,7 @@ function testTransit(event, data) {
       title: "提示",
       message: `${err.message}，请检查设置！`,
       buttons: ["确定"],
+      noLink: true,
     });
     socket.close();
   });
@@ -300,6 +306,7 @@ function testTransit(event, data) {
       title: "提示",
       message: "连接成功！",
       buttons: ["确定"],
+      noLink: true,
     });
   });
 
