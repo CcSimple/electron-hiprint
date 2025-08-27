@@ -7,8 +7,8 @@
   "license": "MIT",
   "homepage": "https://gitee.com/CcSimple",
   "scripts": {
-    "start": "node start.js",
-    "postinstall": "npm run fix-sqlite3",
+    "start": "node ./build/write-build-info.js && node start.js",
+    "postinstall": "npm run fix-sqlite3 && node ./build/write-build-info.js",
     "fix-sqlite3": "node ./build/fixSqlite3bug.js",
     "build-w": "electron-builder -w nsis:ia32 && node ./tools/rename --tag win_x32",
     "build-w-64": "electron-builder -w nsis:x64 && node ./tools/rename --tag win_x64",

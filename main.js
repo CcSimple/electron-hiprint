@@ -28,6 +28,7 @@ const {
   initServeEvent,
   initClientEvent,
   getMachineId,
+  showAboutDialog,
 } = require("./tools/utils");
 
 const TaskRunner = require("concurrent-tasks");
@@ -391,6 +392,13 @@ function initTray() {
         } else {
           PRINT_LOG_WINDOW.show();
         }
+      },
+    },
+    {
+      label: "关于",
+      click: () => {
+        console.log("==>TRAY 打开关于弹框<==");
+        showAboutDialog();
       },
     },
     {
