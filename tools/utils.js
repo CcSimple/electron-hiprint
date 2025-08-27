@@ -1,11 +1,17 @@
 const os = require("os");
-const { app, Notification } = require("electron");
+const { app, Notification, dialog, clipboard, shell } = require("electron");
 const address = require("address");
 const ipp = require("ipp");
 const { machineIdSync } = require("node-machine-id");
 const Store = require("electron-store");
 const { getPaperSizeInfo, getPaperSizeInfoAll } = require("win32-pdf-printer");
 const { v7: uuidv7 } = require("uuid");
+const fs = require("fs");
+let buildInfo = {};
+const buildInfoPath = require("path").join(__dirname, "../build-info.json");
+if (fs.existsSync(buildInfoPath)) {
+  buildInfo = require(buildInfoPath);
+}
 
 Store.initRenderer();
 
@@ -748,6 +754,52 @@ function getCurrentPrintStatusByName(printerName) {
   return { StatusMsg: "非Windows系统, 暂不支持" };
 }
 
+function showAboutDialog() {
+  const detail = `版本: ${app.getVersion()}
+提交: ${buildInfo.commitId}
+日期: ${buildInfo.commitDate}
+Electron: ${process.versions.electron}
+Chromium: ${process.versions.chrome}
+Node.js: ${process.versions.node}
+V8: ${process.versions.v8}
+OS: ${os.type()} ${os.arch()} ${os.release()}`.trim();
+  const title = store.get("mainTitle") || "Electron-hiprint";
+  dialog
+    .showMessageBox({
+      title: `关于 ${title}`,
+      message: title,
+      type: "info",
+      buttons: ["反馈", "复制", "确定"],
+      noLink: true,
+      defaultId: 0,
+      detail,
+      cancelId: 2,
+      normalizeAccessKeys: true,
+    })
+    .then((result) => {
+      if (result.response === 0) {
+        const issuesUrl = new URL(
+          `https://github.com/CcSimple/electron-hiprint/issues/new`,
+        );
+        issuesUrl.searchParams.set(
+          "title",
+          `[反馈][${app.getVersion()}] 在此处完善反馈标题`,
+        );
+        const issuesBody = `## 问题描述
+请在此处详细描述你遇到的问题
+
+## 版本信息
+  
+${detail}`;
+        issuesUrl.searchParams.set("body", issuesBody);
+        shell.openExternal(issuesUrl.href);
+      }
+      if (result.response === 1) {
+        clipboard.writeText(detail);
+      }
+    });
+}
+
 module.exports = {
   store,
   address: _address,
@@ -755,4 +807,5 @@ module.exports = {
   initClientEvent,
   getCurrentPrintStatusByName,
   getMachineId,
+  showAboutDialog,
 };
