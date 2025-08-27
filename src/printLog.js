@@ -142,6 +142,7 @@ function fetchPrintLogs(event, { condition, params, page, sort }) {
         title: "错误",
         message: "获取打印日志失败！",
         detail: err.message,
+        noLink: true,
       });
     });
 }

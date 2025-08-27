@@ -455,7 +455,7 @@ async function printFun(event, data) {
  * @return {void}
  */
 function showMessageBox(event, data) {
-  dialog.showMessageBox(SET_WINDOW, data);
+  dialog.showMessageBox(SET_WINDOW, { noLink: true, ...data });
 }
 
 /**
