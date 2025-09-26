@@ -3,8 +3,8 @@
  * @Author: CcSimple
  * @Github: https://github.com/CcSimple
  * @Date: 2023-04-21 16:35:07
- * @LastEditors: CcSimple
- * @LastEditTime: 2023-07-14 14:09:19
+ * @LastEditors: JZT.吴健
+ * @LastEditTime: 2025-09-26 14:10:48
  */
 const pdfPrint1 = require("pdf-to-printer");
 const pdfPrint2 = require("unix-print");
@@ -46,9 +46,8 @@ const realPrint = (pdfPath, printer, data, resolve, reject) => {
         reject();
       });
   } else {
-    // 参数见 lp 命令 使用方法
-    let options = [];
-    printPdfFunction(pdfPath, printer, options)
+    // 参数见 lp 命令 使用方法, 使用外部传入的lp命令
+    printPdfFunction(pdfPath, printer, data.unixPrintOptions || [])
       .then(() => {
         resolve();
       })
