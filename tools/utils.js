@@ -1,14 +1,71 @@
 const os = require("os");
+const path = require("path");
+const fs = require("fs");
+const childProcess = require("child_process");
 const { app, Notification, dialog, clipboard, shell } = require("electron");
 const address = require("address");
 const ipp = require("ipp");
 const { machineIdSync } = require("node-machine-id");
 const Store = require("electron-store");
-const { getPaperSizeInfo, getPaperSizeInfoAll } = require("win32-pdf-printer");
 const { v7: uuidv7 } = require("uuid");
-const fs = require("fs");
+
+/**
+ * win32-pdf-printer 的 paper-size-info.exe 会被 electron-builder 解压到 app.asar.unpacked。
+ * 运行环境下它仍然使用 app.asar 路径，导致文件不存在。这里提前重写 child_process 的执行路径。
+ */
+function patchWin32PdfPrinterBinPath() {
+  if (process.platform !== "win32" || !app.isPackaged) return;
+  const pattern = /app\.asar([\\/])(?=node_modules[\\/]win32-pdf-printer[\\/]paper-size-info\.exe)/i;
+  const unpackedSegment = "app.asar.unpacked";
+  const unpackedBin = path.join(
+    process.resourcesPath,
+    unpackedSegment,
+    "node_modules",
+    "win32-pdf-printer",
+    "paper-size-info.exe",
+  );
+  if (!fs.existsSync(unpackedBin)) return;
+
+  const rewriteCommand = (command) => {
+    if (typeof command !== "string" || !pattern.test(command)) return command;
+    if (command.includes(unpackedSegment)) return command;
+    const replaced = command.replace(pattern, `${unpackedSegment}$1`);
+    // 如果路径包含空格且未被引号包裹，给 exe 路径加引号，避免 C:\Program Files 被截断
+    if (
+      replaced === unpackedBin ||
+      replaced === unpackedBin.replace(/\\/g, "/") ||
+      replaced.startsWith(unpackedBin + " ")
+    ) {
+      return replaced.includes(" ") && !/^\".*\"$/.test(replaced)
+        ? `"${replaced}"`
+        : replaced;
+    }
+    return replaced;
+  };
+
+  const wrap = (original) =>
+    function patched(command, ...args) {
+      return original.call(childProcess, rewriteCommand(command), ...args);
+    };
+
+  childProcess.execFile = wrap(childProcess.execFile);
+  childProcess.exec = wrap(childProcess.exec);
+  childProcess.execSync = wrap(childProcess.execSync);
+  const spawn = childProcess.spawn;
+  childProcess.spawn = function(command, ...args) {
+    return spawn.call(childProcess, rewriteCommand(command), ...args);
+  };
+  const spawnSync = childProcess.spawnSync;
+  childProcess.spawnSync = function(command, ...args) {
+    return spawnSync.call(childProcess, rewriteCommand(command), ...args);
+  };
+}
+
+patchWin32PdfPrinterBinPath();
+
+const { getPaperSizeInfo, getPaperSizeInfoAll } = require("win32-pdf-printer");
 let buildInfo = {};
-const buildInfoPath = require("path").join(__dirname, "../build-info.json");
+const buildInfoPath = path.join(__dirname, "../build-info.json");
 if (fs.existsSync(buildInfoPath)) {
   buildInfo = require(buildInfoPath);
 }
