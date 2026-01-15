@@ -30,15 +30,26 @@ function patchWin32PdfPrinterBinPath() {
     if (typeof command !== "string" || !pattern.test(command)) return command;
     if (command.includes(unpackedSegment)) return command;
     const replaced = command.replace(pattern, `${unpackedSegment}$1`);
-    // 如果路径包含空格且未被引号包裹，给 exe 路径加引号，避免 C:\Program Files 被截断
+    // 仅包裹 exe 路径，避免把参数一起包进引号导致命令解析失败
+    const unpackedBinNormalized = unpackedBin.replace(/\\/g, "/");
+    const quoteIfNeeded = (exePath) =>
+      exePath.includes(" ") ? `"${exePath}"` : exePath;
     if (
-      replaced === unpackedBin ||
-      replaced === unpackedBin.replace(/\\/g, "/") ||
-      replaced.startsWith(unpackedBin + " ")
+      replaced.startsWith(`"${unpackedBin}"`) ||
+      replaced.startsWith(`"${unpackedBinNormalized}"`)
     ) {
-      return replaced.includes(" ") && !/^\".*\"$/.test(replaced)
-        ? `"${replaced}"`
-        : replaced;
+      return replaced;
+    }
+    if (replaced === unpackedBin || replaced === unpackedBinNormalized) {
+      return quoteIfNeeded(replaced);
+    }
+    if (replaced.startsWith(unpackedBin + " ")) {
+      return `${quoteIfNeeded(unpackedBin)}${replaced.slice(unpackedBin.length)}`;
+    }
+    if (replaced.startsWith(unpackedBinNormalized + " ")) {
+      return `${quoteIfNeeded(unpackedBinNormalized)}${replaced.slice(
+        unpackedBinNormalized.length,
+      )}`;
     }
     return replaced;
   };
@@ -422,8 +433,16 @@ function initServeEvent(server) {
     socket.on("getPaperSizeInfo", (printer) => {
       console.log(`插件端 ${socket.id}: getPaperSizeInfo`);
       if (process.platform === "win32") {
-        let fun = printer ? getPaperSizeInfo : getPaperSizeInfoAll;
-        let paper = fun();
+        const printerName =
+          typeof printer === "string"
+            ? printer
+            : printer && typeof printer.printer === "string"
+              ? printer.printer
+              : "";
+        let paper = getPaperSizeInfoAll();
+        if (printerName) {
+          paper = paper.find((item) => item.PrinterName === printerName) || null;
+        }
         paper && socket.emit("paperSizeInfo", paper);
       }
     });
