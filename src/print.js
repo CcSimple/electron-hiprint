@@ -76,7 +76,9 @@ function initPrintEvent() {
         // win32: https://learn.microsoft.com/en-us/windows/win32/printdocs/printer-info-2
         // cups: https://www.cups.org/doc/cupspm.html#ipp_status_e
         if (process.platform === "win32") {
-          if (element.status != 0) {
+          // 512 忙(Busy）
+          // 1024 正在打印（Printing）
+          if (![0, 512, 1024].includes(element.status)) {
             printerError = true;
           }
         } else {
