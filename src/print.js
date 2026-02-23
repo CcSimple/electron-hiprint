@@ -61,6 +61,10 @@ function initPrintEvent() {
     const printers = await PRINT_WINDOW.webContents.getPrintersAsync();
     let havePrinter = false;
     let defaultPrinter = data.printer || store.get("defaultPrinter", "");
+    // todo: 打印机状态对照表，根据打印机状态判断是否支持打印
+    // win32: https://learn.microsoft.com/en-us/windows/win32/printdocs/printer-info-2
+    // cups: https://www.cups.org/doc/cupspm.html#ipp_status_e
+    const ENABLE_STATUS = process.platform === "win32" ? [0, 512, 1024] : [3];
     let printerError = false;
     printers.forEach((element) => {
       // 获取默认打印机
@@ -70,21 +74,10 @@ function initPrintEvent() {
       ) {
         defaultPrinter = element.name;
       }
-      // 判断打印机是否存在
+      // 判断打印机状态是否允许打印
       if (element.name === defaultPrinter) {
-        // todo: 打印机状态对照表
-        // win32: https://learn.microsoft.com/en-us/windows/win32/printdocs/printer-info-2
-        // cups: https://www.cups.org/doc/cupspm.html#ipp_status_e
-        if (process.platform === "win32") {
-          // 512 忙(Busy）
-          // 1024 正在打印（Printing）
-          if (![0, 512, 1024].includes(element.status)) {
-            printerError = true;
-          }
-        } else {
-          if (element.status != 3) {
-            printerError = true;
-          }
+        if (!ENABLE_STATUS.includes(element.status)) {
+          printerError = true;
         }
         havePrinter = true;
       }
@@ -275,11 +268,11 @@ function initPrintEvent() {
           }】 打印失败，原因：${errorMsg}`,
         );
         socket &&
-        socket.emit("error", {
-          msg: errorMsg,
-          templateId: data.templateId,
-          replyId: data.replyId,
-        });
+          socket.emit("error", {
+            msg: errorMsg,
+            templateId: data.templateId,
+            replyId: data.replyId,
+          });
         logPrintResult("failed", errorMsg);
         if (data.taskId) {
           PRINT_RUNNER_DONE[data.taskId]();
@@ -321,11 +314,11 @@ function initPrintEvent() {
             }`,
           );
           socket &&
-          socket.emit("error", {
-            msg: "打印失败: " + err.message,
-            templateId: data.templateId,
-            replyId: data.replyId,
-          });
+            socket.emit("error", {
+              msg: "打印失败: " + err.message,
+              templateId: data.templateId,
+              replyId: data.replyId,
+            });
           logPrintResult("failed", err.message);
         })
         .finally(() => {
@@ -415,12 +408,16 @@ function checkPrinterStatus(deviceName, callback) {
       .then((printers) => {
         const printer = printers.find((printer) => printer.name === deviceName);
         console.log(`current printer: ${JSON.stringify(printer)}`);
-        const ISCAN_STATUS = process.platform === "win32" ? 0 : 3;
-        if (printer && printer.status === ISCAN_STATUS) {
+        // todo: 打印机状态对照表，根据打印机状态判断是否支持打印
+        // win32: https://learn.microsoft.com/en-us/windows/win32/printdocs/printer-info-2
+        // cups: https://www.cups.org/doc/cupspm.html#ipp_status_e
+        const ENABLE_STATUS =
+          process.platform === "win32" ? [0, 512, 1024] : [3];
+        if (printer && ENABLE_STATUS.includes(printer.status)) {
           callback && callback();
           clearInterval(intervalId); // Stop polling when status is 0
           console.log(
-            `Printer ${deviceName} is now ready (status: ${ISCAN_STATUS})`,
+            `Printer ${deviceName} is now ready (status: ${printer.status})`,
           );
           // You can add any additional logic here for when the printer is ready
         }
