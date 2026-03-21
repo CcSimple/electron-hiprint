@@ -15,7 +15,7 @@
     "build-m": "electron-builder -m --x64 && node ./tools/rename --tag mac_x64",
     "build-m-arm64": "electron-builder -m --arm64 && node ./tools/rename --tag mac_arm64",
     "build-m-universal": "electron-builder -m --universal && node ./tools/rename --tag mac_universal",
-    "build-l": "electron-builder -l tar.xz && node ./tools/rename --tag linux_64",
+    "build-l": "electron-builder -l && node ./tools/rename --tag linux_64",
     "build-l-arm64": "electron-builder -l --arm64 && node ./tools/rename --tag linux_arm64",
     "build-kylin": "electron-builder && node ./tools/rename --tag Kylin_64",
     "compress": "node ./tools/code_compress --compress",
