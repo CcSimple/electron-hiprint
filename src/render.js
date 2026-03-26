@@ -364,8 +364,8 @@ async function printFun(event, data) {
         replyId: data.replyId,
       });
     // 通过 taskMap 调用 task done 回调
-    PRINT_RUNNER_DONE[data.taskId]();
-    delete PRINT_RUNNER_DONE[data.taskId];
+    RENDER_RUNNER_DONE[data.taskId]();
+    delete RENDER_RUNNER_DONE[data.taskId];
     return;
   }
   let deviceName = defaultPrinter;
