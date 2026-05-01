@@ -729,16 +729,18 @@ socket.on("disconnect", () => {
 
 ### 查询打印状态
 
-通过 `getPrintStatus` 事件，可以查询指定 `templateId` 的打印状态，即使网页短暂关闭重新连接后，也可以查询之前提交的打印任务状态。
+通过 `getPrintStatus` 事件，可以查询指定 `templateIds` 的打印状态，即使网页短暂关闭重新连接后，也可以查询之前提交的打印任务状态。`templateIds` 为空时返回最近 20 条记录。
 
 ```js
 // socket.io-client
-// 发送查询请求，templateIds 为需要查询的模板 id 列表
+// 发送查询请求，templateIds 为需要查询的模板 id 列表；为空时返回最近 20 条记录
 socket.emit("getPrintStatus", { templateIds: ["templateId1", "templateId2"] });
+// 或不传 templateIds，查询最近 20 条记录
+socket.emit("getPrintStatus", {});
 
 // 监听查询结果
 socket.on("printStatus", (rows) => {
-  // rows 为打印记录列表，每条记录包含：
+  // rows 为打印记录列表，按时间倒序排列，每条记录包含：
   // id, timestamp, socketId, clientType, printer, templateId, pageNum, status, rePrintAble, errorMessage
   console.log(rows);
 });
