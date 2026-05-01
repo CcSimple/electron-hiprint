@@ -75,6 +75,7 @@ function patchWin32PdfPrinterBinPath() {
 patchWin32PdfPrinterBinPath();
 
 const { getPaperSizeInfo, getPaperSizeInfoAll } = require("win32-pdf-printer");
+const db = require("./database");
 let buildInfo = {};
 const buildInfoPath = path.join(__dirname, "../build-info.json");
 if (fs.existsSync(buildInfoPath)) {
@@ -316,6 +317,28 @@ function generateWatchTask(getCheckTarget) {
       },
     };
   };
+}
+
+/**
+ * @description: 查询打印状态，按 templateIds 过滤打印记录并通过回调返回结果
+ * @param {Array<String>} templateIds 模板id列表
+ * @param {Function} onSuccess 查询成功回调，参数为 rows
+ * @param {Function} onError 查询失败回调，参数为 err
+ * @return {void}
+ */
+function queryPrintStatus(templateIds, onSuccess, onError) {
+  const placeholders = templateIds.map(() => "?").join(",");
+  db.all(
+    `SELECT id, timestamp, socketId, clientType, printer, templateId, pageNum, status, rePrintAble, errorMessage FROM print_logs WHERE templateId IN (${placeholders})`,
+    templateIds,
+    (err, rows) => {
+      if (err) {
+        onError(err);
+      } else {
+        onSuccess(rows);
+      }
+    },
+  );
 }
 
 /**
@@ -611,6 +634,25 @@ function initServeEvent(server) {
     });
 
     /**
+     * @description: client 查询打印状态
+     * @param {Object} data
+     * @param {Array<String>} data.templateIds 模板id列表
+     */
+    socket.on("getPrintStatus", (data) => {
+      console.log(`插件端 ${socket.id}: getPrintStatus`);
+      if (data && Array.isArray(data.templateIds) && data.templateIds.length > 0) {
+        queryPrintStatus(
+          data.templateIds,
+          (rows) => socket.emit("printStatus", rows),
+          (err) => {
+            console.error(`插件端 ${socket.id}: getPrintStatus error: ${err.message}`);
+            socket.emit("printStatusError", { msg: err.message });
+          },
+        );
+      }
+    });
+
+    /**
      * @description: client 断开连接
      */
     socket.on("disconnect", () => {
@@ -800,6 +842,25 @@ function initClientEvent() {
         RENDER_WINDOW.webContents.send("pdf", data);
         RENDER_RUNNER_DONE[data.taskId] = done;
       });
+    }
+  });
+
+  /**
+   * @description: 中转服务 查询打印状态
+   * @param {Object} data
+   * @param {Array<String>} data.templateIds 模板id列表
+   */
+  client.on("getPrintStatus", (data) => {
+    console.log(`中转服务 ${client.id}: getPrintStatus`);
+    if (data && Array.isArray(data.templateIds) && data.templateIds.length > 0) {
+      queryPrintStatus(
+        data.templateIds,
+        (rows) => client.emit("printStatus", rows),
+        (err) => {
+          console.error(`中转服务 ${client.id}: getPrintStatus error: ${err.message}`);
+          client.emit("printStatusError", { msg: err.message });
+        },
+      );
     }
   });
 

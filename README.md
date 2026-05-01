@@ -727,6 +727,28 @@ socket.on("disconnect", () => {
    });
    ```
 
+### 查询打印状态
+
+通过 `getPrintStatus` 事件，可以查询指定 `templateId` 的打印状态，即使网页短暂关闭重新连接后，也可以查询之前提交的打印任务状态。
+
+```js
+// socket.io-client
+// 发送查询请求，templateIds 为需要查询的模板 id 列表
+socket.emit("getPrintStatus", { templateIds: ["templateId1", "templateId2"] });
+
+// 监听查询结果
+socket.on("printStatus", (rows) => {
+  // rows 为打印记录列表，每条记录包含：
+  // id, timestamp, socketId, clientType, printer, templateId, pageNum, status, rePrintAble, errorMessage
+  console.log(rows);
+});
+
+// 监听查询失败
+socket.on("printStatusError", (err) => {
+  console.error(err.msg);
+});
+```
+
 ## URL Scheme 支持
 
 通过 `hiprint://` 协议，可以从 Web 项目中调起 `electron-hiprint` 客户端，以便未建立连接时主动唤起客户端。
