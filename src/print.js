@@ -353,6 +353,9 @@ function initPrintEvent() {
         header: data.header, // 打印头
         footer: data.footer, // 打印尾
         pageSize: data.pageSize, // 打印纸张
+        // 未指定 pageSize 时优先使用模板 CSS 中的 @page { size } 来确定纸张大小
+        // When pageSize is not specified, prefer the template's CSS @page size
+        preferCSSPageSize: data.preferCSSPageSize ?? (data.pageSize == null),
       },
       (success, failureReason) => {
         if (success) {
