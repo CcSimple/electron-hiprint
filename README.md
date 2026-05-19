@@ -457,6 +457,9 @@ if (globalThis.connect) {
     header: data.header, // 打印头
     footer: data.footer, // 打印尾
     pageSize: data.pageSize, // 打印纸张 // A0, A1, A2, A3, A4, A5, A6, Legal, Letter, Tabloid
+    // 未指定 pageSize 时，默认使用模板 CSS 中的 @page { size } 来确定纸张大小
+    // 指定 pageSize 时，CSS @page { size } 将被忽略，以 pageSize 为准
+    preferCSSPageSize: data.pageSize == null,
 }
 // 其中纸张大小参数 pageSize 如果传自定义大小, 需要乘以 1000
 { height: 80 * 1000, width: 60 * 1000 }
