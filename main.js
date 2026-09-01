@@ -167,7 +167,7 @@ async function createWindow() {
   };
 
   // 窗口左上角图标（开发 & 打包后都要设置）
-  windowOptions.icon = path.join(__dirname, "build/icons/256x256.png");
+  windowOptions.icon = path.join(__dirname, "build/icons/icon.ico");
 
   if (app.isPackaged) {
     app.setLoginItemSettings({
