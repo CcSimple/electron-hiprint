@@ -1,6 +1,6 @@
 {
   "name": "electron-hiprint",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "vue-plugin-hiprint client",
   "main": "main.js",
   "author": "CcSimple<840054486@qq.com>",
@@ -59,7 +59,7 @@
       "sign": false
     },
     "win": {
-      "icon": "./build/icons/256x256.png",
+      "icon": "./build/icons/icon.ico",
       "artifactName": "${productName}-${version}.${ext}",
       "target": [
         {
@@ -68,7 +68,7 @@
       ]
     },
     "linux": {
-      "icon": "./build/icons/256x256.png",
+      "icon": "./build/icons",
       "artifactName": "${productName}-${version}.${ext}",
       "target": [
         "tar.xz",
