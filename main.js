@@ -29,8 +29,6 @@ const {
 } = require("./tools/utils");
 const { machineIdSync } = require("node-machine-id");
 const TaskRunner = require("concurrent-tasks");
-// 导入 nativeImage，用于生成图标
-const { nativeImage } = require("electron");
 app.commandLine.appendSwitch("disable-gpu");
 // 主进程
 global.MAIN_WINDOW = null;
@@ -170,29 +168,10 @@ async function createWindow() {
   };
 
   // 窗口左上角图标
-  // Windows 优先使用 .ico 格式，兼容性更好
-  const iconBaseDir = app.isPackaged
-    ? __dirname.replace("app.asar", "app.asar.unpacked")
-    : __dirname;
-  const iconCandidates = [
-    path.join(iconBaseDir, "build/icons/icon.ico"),
-    path.join(iconBaseDir, "build/icons/256x256.png"),
-    path.join(iconBaseDir, "build/icons/512x512.png"),
-  ];
-  let windowIcon = null;
-  for (const candidate of iconCandidates) {
-    if (require("fs").existsSync(candidate)) {
-      try {
-        windowIcon = nativeImage.createFromPath(candidate);
-        if (!windowIcon.isEmpty()) break;
-      } catch (e) {
-        console.warn("加载图标失败:", candidate, e.message);
-      }
-    }
-  }
-  if (windowIcon && !windowIcon.isEmpty()) {
-    windowOptions.icon = windowIcon;
-  }
+  const iconPath = app.isPackaged
+    ? path.join(__dirname.replace("app.asar", "app.asar.unpacked"), "build/icons/icon.ico")
+    : path.join(__dirname, "build/icons/icon.ico");
+  windowOptions.icon = iconPath;
 
   if (app.isPackaged) {
     app.setLoginItemSettings({
