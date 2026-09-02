@@ -13,6 +13,7 @@ const {
   Tray,
   Menu,
   shell,
+  nativeImage,
 } = require("electron");
 const path = require("path");
 const server = require("http").createServer();
