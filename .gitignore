@@ -17,4 +17,5 @@ package-lock.json
 
 run/
 out/
+.cache/
 .history/
