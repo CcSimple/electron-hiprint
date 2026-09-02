@@ -167,9 +167,12 @@ async function createWindow() {
   };
 
   // 窗口左上角图标
-  if (!app.isPackaged) {
-    windowOptions.icon = path.join(__dirname, "build/icons/256x256.png");
-  } else {
+  const iconPath = app.isPackaged
+    ? path.join(__dirname.replace("app.asar", "app.asar.unpacked"), "build/icons/256x256.png")
+    : path.join(__dirname, "build/icons/256x256.png");
+  windowOptions.icon = iconPath;
+
+  if (app.isPackaged) {
     app.setLoginItemSettings({
       openAtLogin: store.get("openAtLogin"),
       openAsHidden: store.get("openAsHidden"),

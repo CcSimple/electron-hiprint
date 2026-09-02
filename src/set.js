@@ -37,9 +37,10 @@ async function createSetWindow() {
   };
 
   // 设置窗口图标
-  if (!app.isPackaged) {
-    windowOptions.icon = path.join(__dirname, "../build/icons/256x256.png");
-  }
+  const iconPath = app.isPackaged
+    ? path.join(__dirname.replace("app.asar", "app.asar.unpacked"), "../build/icons/256x256.png")
+    : path.join(__dirname, "../build/icons/256x256.png");
+  windowOptions.icon = iconPath;
 
   // 创建设置窗口
   SET_WINDOW = new BrowserWindow(windowOptions);
